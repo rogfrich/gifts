@@ -175,4 +175,6 @@ cython_debug/
 
 # Local stuff that shouldn't be in the GitHub repo
 local.txt
+/local
+
 
