@@ -172,3 +172,7 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Local stuff that shouldn't be in the GitHub repo
+local.txt
+
