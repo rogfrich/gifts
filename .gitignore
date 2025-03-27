@@ -178,3 +178,5 @@ local.txt
 /local
 
 
+# Apple stuff
+.DS_Store
