@@ -1,6 +1,9 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
+from django.urls import reverse, resolve
 from .models import Wish  # Updated import to Wish
+
+from .views import my_wishes, other_wishes, my_claims
 
 class WishModelTest(TestCase):  # Updated class name
     def setUp(self):
@@ -21,3 +24,86 @@ class WishModelTest(TestCase):  # Updated class name
 
     def test_wish_string_representation(self):  # Updated method name
         self.assertEqual(str(self.wish), "Test wish")
+
+class UrlViewTemplateTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.client.login(username='testuser', password='testpassword')
+
+    def test_url_view_template_wiring(self):
+        """
+        For each URL:
+        1. Test if the URL can be reached and returns the correct status codes.
+        2. Test if the correct templates is returned by the view.
+        3. Test if the correct view are used.
+        """
+        response = self.client.get(reverse('my_wishes'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'gifts/my-wishes.html')
+        found = resolve('/my-wishes/')
+        self.assertEqual(found.func, my_wishes)
+
+        response = self.client.get(reverse('other_wishes'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'gifts/other-wishes.html')
+        found = resolve('/wishes/')
+        self.assertEqual(found.func, other_wishes)
+
+        response = self.client.get(reverse('my_claims'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'gifts/my-claims.html')
+        found = resolve('/my-claims/')
+        self.assertEqual(found.func, my_claims)
+
+
+class AuthenticationTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+
+    def test_login(self):
+        """
+        User should be able to log in successfully. and should be redirected to my_wishes.
+        """
+        self.client.login(username='testuser', password='testpassword')
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 302)  # Redirect to my_wishes
+        self.assertRedirects(response, '/my-wishes/')
+
+    def test_logout(self):
+        """
+        User should be able to log out successfully. and should be redirected to login.
+        """
+        self.client.login(username='testuser', password='testpassword')
+        response = self.client.post('/logout/')
+        self.assertEqual(response.status_code, 302) # Redirect to login
+        self.assertRedirects(response, '/login/')
+
+    def test_logged_in_user_access(self):
+        """
+        Logged-in user should be able to access all views.
+        """
+        self.client.login(username='testuser', password='testpassword')
+        response = self.client.get('/wishes/')
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get('/my-wishes/')
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get('/my-claims/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_logged_out_user_access(self):
+        """
+        Logged-out user should be redirected to login page when trying to access views.
+        """
+        response = self.client.get('/wishes/')
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/login/?next=/wishes/')
+        response = self.client.get('/my-wishes/')
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/login/?next=/my-wishes/')
+        response = self.client.get('/my-claims/')
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/login/?next=/my-claims/')
+
+
+    
+
