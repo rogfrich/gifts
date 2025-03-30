@@ -105,5 +105,75 @@ class AuthenticationTest(TestCase):
         self.assertRedirects(response, '/login/?next=/my-claims/')
 
 
-    
+class MyWishesViewTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser1', password='testpassword')
+        self.client.login(username='testuser1', password='testpassword')
+        for i in range(3):
+            Wish.objects.create(
+                user=self.user,
+                title=f"User 1 - Test Wish {i}",
+                detail=f"This is test wish {i}",
+                link="https://www.example.com",
+            )
 
+        self.client.logout()
+        
+        self.user2 = User.objects.create_user(username='testuser2', password='testpassword')
+        self.client.login(username='testuser2', password='testpassword')
+        for i in range(3):
+            Wish.objects.create(
+                user=self.user2,
+                title=f"Test Wish User2 {i}",
+                detail=f"This is test wish {i}",
+                link="https://www.example.com",
+            )
+        self.client.logout()
+
+    def test_my_wishes_context(self):
+        """
+        Test if the context of my_wishes view contains the correct wishes.
+        """
+        self.client.login(username='testuser1', password='testpassword')
+        response = self.client.get(reverse('my_wishes'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['wishes']), 3)
+        for i in range(3):
+            self.assertContains(response, f"User 1 - Test Wish {i}")
+
+class LinkFieldBehaviourWithURLTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.client.login(username='testuser', password='testpassword')
+        self.wish_with_link = Wish.objects.create(
+            user=self.user,
+            title="Test Wish",
+            detail="A test wish a link",
+            link="https://www.example.com",
+        )
+
+
+
+    def test_link_field_behaviour(self):
+        """
+        Test if the link field behaves correctly.
+        """
+        response = self.client.get(reverse('my_wishes'))
+        self.assertContains(response, '<a href="https://www.example.com">Link</a>')  # Check if the link is rendered correctly
+
+class LinkFieldBehaviourWithoutURL(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.client.login(username='testuser', password='testpassword')
+        self.wish_without_link = Wish.objects.create(
+            user=self.user,
+            title="Test Wish",
+            detail="A test wish without a link",
+        )
+
+    def test_link_field_behaviour(self):
+        """
+        Test if the link field behaves correctly when no URL is provided.
+        """
+        response = self.client.get(reverse('my_wishes'))
+        self.assertContains(response, '<td>N/A</td>')  # Check if the link is not rendered

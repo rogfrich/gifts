@@ -20,7 +20,11 @@ def home(request):
 
 @login_required
 def my_wishes(request):
-    return render(request, 'gifts/my-wishes.html')
+    context = {
+        'wishes': Wish.objects.filter(user=request.user)
+    }   
+
+    return render(request, 'gifts/my-wishes.html', context=context)
 
 @login_required
 def other_wishes(request):
