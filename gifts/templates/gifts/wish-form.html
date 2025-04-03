@@ -1,0 +1,10 @@
+{% extends "gifts/base.html" %}
+{% block content %}
+  <h2>{% if form.instance.pk %}Edit Wish{% else %}Create a Wish{% endif %}</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save Wish</button>
+  </form>
+  <a href="{% url 'my_wishes' %}">Back to wishes</a>
+{% endblock %}
