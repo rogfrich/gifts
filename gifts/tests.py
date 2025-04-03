@@ -177,3 +177,29 @@ class LinkFieldBehaviourWithoutURL(TestCase):
         """
         response = self.client.get(reverse('my_wishes'))
         self.assertContains(response, '<td>N/A</td>')  # Check if the link is not rendered
+
+
+class CreateWishViewTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.client.login(username='testuser', password='testpassword')
+
+    def test_create_wish_get(self):
+        """
+        Test if the create_wish view returns the correct template.
+        """
+        response = self.client.get(reverse('create_wish'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'gifts/wish-form.html')
+
+    def test_create_wish_post(self):
+        """
+        Test if the create_wish view creates a wish and redirects correctly.
+        """
+        response = self.client.post(reverse('create_wish'), {
+            'title': 'New Wish',
+            'detail': 'A new wish description',
+            'link': 'https://www.example.com',
+        })
+        self.assertEqual(response.status_code, 302)  # Redirect to my_wishes
+        self.assertRedirects(response, '/my-wishes/')
