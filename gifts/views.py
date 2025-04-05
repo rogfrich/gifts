@@ -1,6 +1,7 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Wish
+from .forms import WishForm, DeleteWishConfirmationForm
 from django.contrib.auth.views import LoginView, LogoutView
 
 class CustomLoginView(LoginView):
@@ -20,7 +21,11 @@ def home(request):
 
 @login_required
 def my_wishes(request):
-    return render(request, 'gifts/my-wishes.html')
+    context = {
+        'wishes': Wish.objects.filter(user=request.user)
+    }   
+
+    return render(request, 'gifts/my-wishes.html', context=context)
 
 @login_required
 def other_wishes(request):
@@ -29,3 +34,52 @@ def other_wishes(request):
 @login_required
 def my_claims(request):
     return render(request, 'gifts/my-claims.html')
+
+
+@login_required
+def create_wish(request):
+    if request.method == 'POST':
+        form = WishForm(request.POST)
+        if form.is_valid():
+            wish = form.save(commit=False)
+            wish.user = request.user
+            wish.save()
+            return redirect('my_wishes')
+    else:
+        form = WishForm()
+    
+    context = {
+        'form': form
+    }
+
+    return render(request, 'gifts/wish-form.html', context=context)
+
+@login_required
+def edit_wish(request, wish_id):
+    wish = get_object_or_404(Wish, id=wish_id, user=request.user)
+    if request.method == 'POST':
+        form = WishForm(request.POST, instance=wish)
+        if form.is_valid():
+            form.save()
+            return redirect('my_wishes')
+    else:
+        form = WishForm(instance=wish)
+    
+    context = {
+        'form': form,
+    }
+
+    return render(request, 'gifts/wish-form.html', context=context)
+
+@login_required
+def delete_wish(request, wish_id):
+    wish = get_object_or_404(Wish, id=wish_id, user=request.user)
+    if request.method == 'POST':
+        wish.delete()
+        return redirect('my_wishes')
+    
+    context = {
+        'wish': wish,
+        'form': DeleteWishConfirmationForm(),
+    }
+    return render(request, 'gifts/delete-wish.html', context=context)

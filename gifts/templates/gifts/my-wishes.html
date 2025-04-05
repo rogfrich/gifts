@@ -1,5 +1,32 @@
 {% extends 'gifts/base.html' %}
 
 {% block content %}
-This is a placeholder for my-wishes.html
+
+<br>
+<a href = {% url 'create_wish' %}>Create a new wish</a>
+<table>
+    <tr>
+        <td>Tite</td>
+        <td>Detail</td>
+        <td>Link</td>
+        <td></td>
+        <td></td>
+    </tr>
+    {% for wish in wishes %}
+    <tr>
+        <td>{{ wish.title }}</td>
+        <td>{{ wish.detail }}</td>
+        {% if wish.link %}
+        <td><a href="{{ wish.link }}">Link</a> </td>
+        {% else %}
+        <td>N/A</td>
+        {% endif %}
+        <td><a href="{% url 'edit_wish' wish.id %}">Edit</a></td>
+        <td><a href="{% url 'delete_wish' wish.id %}">Delete</a>></td>
+    </tr>
+    {% endfor %}
+</table>
+
+
+
 {% endblock %}

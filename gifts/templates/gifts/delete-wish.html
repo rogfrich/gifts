@@ -1,0 +1,15 @@
+{% extends 'gifts/base.html' %}
+
+{% block content %}
+  <h2>Delete Wish</h2>
+  <p>Are you sure you want to delete the wish "{{ wish.title }}"?</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Delete Wish</button>
+  </form>
+
+
+
+  <a href="{% url 'my_wishes' %}">Cancel</a>
+{% endblock %}
