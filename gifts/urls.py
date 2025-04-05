@@ -6,6 +6,7 @@ from .views import my_wishes
 from .views import other_wishes
 from .views import my_claims
 from .views import create_wish
+from .views import edit_wish
 
 
 
@@ -17,5 +18,6 @@ urlpatterns = [
     path('my-wishes/', my_wishes, name='my_wishes'),
     path('my-claims/', my_claims, name='my_claims'),
     path('create-wish/', create_wish, name='create_wish'),
-
+    path('edit-wish/<int:wish_id>/', edit_wish, name='edit_wish'), 
 ]
+

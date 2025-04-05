@@ -21,7 +21,7 @@
         {% else %}
         <td>N/A</td>
         {% endif %}
-        <td>Edit</td>
+        <td><a href="{% url 'edit_wish' wish.id %}">Edit</a></td>
         <td>Delete</td>
     </tr>
     {% endfor %}
