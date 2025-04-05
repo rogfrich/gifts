@@ -22,7 +22,7 @@
         <td>N/A</td>
         {% endif %}
         <td><a href="{% url 'edit_wish' wish.id %}">Edit</a></td>
-        <td>Delete</td>
+        <td><a href="{% url 'delete_wish' wish.id %}">Delete</a>></td>
     </tr>
     {% endfor %}
 </table>

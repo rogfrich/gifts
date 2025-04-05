@@ -10,3 +10,6 @@ class WishForm(forms.ModelForm):
             'detail': forms.Textarea(attrs={'placeholder': 'Give a bit more detail about your wish'}),
             'link': forms.TextInput(attrs={'placeholder': 'Enter a link to your wish'}),
         }
+
+class DeleteWishConfirmationForm(forms.Form):
+    pass

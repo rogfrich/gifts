@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Wish
-from .forms import WishForm
+from .forms import WishForm, DeleteWishConfirmationForm
 from django.contrib.auth.views import LoginView, LogoutView
 
 class CustomLoginView(LoginView):
@@ -71,4 +71,15 @@ def edit_wish(request, wish_id):
 
     return render(request, 'gifts/wish-form.html', context=context)
 
+@login_required
+def delete_wish(request, wish_id):
+    wish = get_object_or_404(Wish, id=wish_id, user=request.user)
+    if request.method == 'POST':
+        wish.delete()
+        return redirect('my_wishes')
     
+    context = {
+        'wish': wish,
+        'form': DeleteWishConfirmationForm(),
+    }
+    return render(request, 'gifts/delete-wish.html', context=context)

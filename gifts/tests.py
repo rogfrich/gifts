@@ -285,3 +285,69 @@ class EditViewTest(TestCase):
 
         response = self.client.get(reverse("edit_wish", args=[self.wish.id]))
         self.assertEqual(response.status_code, 404)
+
+
+class DeleteWishTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser", password="testpassword"
+        )
+        self.client.login(username="testuser", password="testpassword")
+        self.wish = Wish.objects.create(
+            user=self.user,
+            title="Test Wish",
+            detail="A test wish description",
+            link="https://www.example.com",
+        )
+
+    def test_delete_wish_get(self):
+        """
+        Test if the delete_wish view returns the correct template.
+        """
+        response = self.client.get(reverse("delete_wish", args=[self.wish.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "gifts/delete-wish.html")
+        self.assertContains(response, "Are you sure you want to delete")
+        self.assertContains(response, "Test Wish")
+        self.assertContains(response, '<form method="post">')
+        self.assertContains(response, '<button type="submit">Delete Wish</button>')
+
+    def test_delete_wish_post(self):
+        """
+        Test if the delete_wish view deletes the wish and redirects correctly.
+        """
+        response = self.client.post(reverse("delete_wish", args=[self.wish.id]))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, "/my-wishes/")
+
+        # Check if the wish was deleted
+        with self.assertRaises(Wish.DoesNotExist):
+            Wish.objects.get(id=self.wish.id)
+
+    def test_delete_wish_not_owner(self):
+        """
+        Test if a user cannot delete a wish that they do not own.
+        """
+        other_user = User.objects.create_user(
+            username="otheruser", password="otherpassword"
+        )
+        self.client.logout()
+        self.client.login(username="otheruser", password="otherpassword")
+
+        response = self.client.get(reverse("delete_wish", args=[self.wish.id]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_delete_wish_not_owner_post(self):
+        """
+        Test if a user cannot delete a wish that they do not own.
+        """
+        other_user = User.objects.create_user(
+            username="otheruser", password="otherpassword"
+        )
+        self.client.logout()
+        self.client.login(username="otheruser", password="otherpassword")
+
+        response = self.client.post(reverse("delete_wish", args=[self.wish.id]))
+        self.assertEqual(response.status_code, 404)
+        # Check if the wish still exists
+        self.assertTrue(Wish.objects.filter(id=self.wish.id).exists())
