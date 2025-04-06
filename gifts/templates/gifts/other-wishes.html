@@ -1,6 +1,32 @@
 {% extends 'gifts/base.html' %}
 
 {% block content %}
-This is a placeholder for other-wishes.html
-{% endblock %}
+<table>
+    <tr>
+        <td>User</td>
+        <td>Title</td>
+        <td>Detail</td>
+        <td>Link</td>
+        <td></td>
+    </tr>
+    {% for wish in wishes %}
+    <tr>
+        <td>{{ wish.user.username }}</td>
+        <td>{{ wish.title }}</td>
+        <td>{{ wish.detail }}</td>
+        {% if wish.link %}
+        <td><a href="{{ wish.link }}">Link</a> </td>
+        {% else %}
+        <td>N/A</td>
+        {% endif %}
+        <td>ACTION</td>
+    </tr>
+    {% endfor %}
 
+</table>
+
+
+
+
+
+{% endblock %}

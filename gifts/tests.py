@@ -351,3 +351,42 @@ class DeleteWishTest(TestCase):
         self.assertEqual(response.status_code, 404)
         # Check if the wish still exists
         self.assertTrue(Wish.objects.filter(id=self.wish.id).exists())
+
+class OtherWishesTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser", password="testpassword"
+        )
+        self.client.login(username="testuser", password="testpassword")
+        for i in range(3):
+            Wish.objects.create(
+                user=self.user,
+                title=f"MY-WISH {i}",
+                detail=f"This is test wish {i}",
+                link="https://www.example.com",
+            )
+
+        self.client.logout()
+
+        self.user2 = User.objects.create_user(
+            username="testuser2", password="testpassword"
+        )
+        self.client.login(username="testuser2", password="testpassword")
+        for i in range(3):
+            Wish.objects.create(
+                user=self.user2,
+                title="OTHER-WISH",
+                detail=f"ONLY IN OTHER WISHES {i}",
+                link="https://www.example.com",
+            )
+        self.client.logout()
+
+    def test_other_wishes_context(self):
+        """
+        Test that only wishes from other users are shown in the context of other_wishes view.
+        """
+        self.client.login(username="testuser", password="testpassword")
+        response = self.client.get(reverse("other_wishes"))
+        for i in range(3):
+            self.assertContains(response, f"ONLY IN OTHER WISHES {i}")
+        self.assertNotContains(response, "MY-WISH")
