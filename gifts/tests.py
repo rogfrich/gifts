@@ -390,3 +390,85 @@ class OtherWishesTest(TestCase):
         for i in range(3):
             self.assertContains(response, f"ONLY IN OTHER WISHES {i}")
         self.assertNotContains(response, "MY-WISH")
+
+class ClaiUnclaimWishTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser", password="testpassword"
+        )
+        self.client.login(username="testuser", password="testpassword")
+        self.wish = Wish.objects.create(
+            user=self.user,
+            title="Test Wish",
+            detail="A test wish description",
+            link="https://www.example.com",
+        )
+
+        self.client.logout()
+
+        self.user2 = User.objects.create_user(
+            username="otheruser", password="otherpassword"
+        )
+        self.client.login(username="otheruser", password="otherpassword")
+        self.wish2 = Wish.objects.create(
+            user=self.user2,
+            title="Other User's Wish",
+            detail="A test wish description",
+            link="https://www.example.com",
+        )
+        self.client.logout()
+        before = Wish.objects.filter(claimed=True)
+        self.assertEqual(len(before), 0)
+        self.client.login(username="testuser", password="testpassword")
+        response = self.client.post(reverse("claim_wish", args=[self.wish2.id]))
+        self.assertEqual(response.status_code, 302)
+        after = Wish.objects.filter(claimed=True)
+        self.assertEqual(len(after), 1)
+        self.assertEqual(before[0].claimed_by, self.user)
+        response = self.client.post(reverse("unclaim_wish", args=[self.wish2.id]))
+        self.assertEqual(response.status_code, 302)
+        after = Wish.objects.filter(claimed=True)
+        self.assertEqual(len(after), 0)
+        self.assertEqual(after[0].claimed_by, None)
+
+
+class TemplateUsesCorrectURLTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser", password="testpassword"
+        )
+        self.client.login(username="testuser", password="testpassword")
+        Wish.objects.create(
+            user=self.user,
+            title=f"MY-WISH",
+            detail=f"This is a test wish",
+            link="https://www.example.com",
+        )
+
+        self.client.logout()
+
+        self.user2 = User.objects.create_user(
+            username="testuser2", password="testpassword"
+        )
+
+        self.user3 = User.objects.create_user(
+            username="testuser3", password="testpassword"
+        )
+ 
+    def test_template_uses_correct_url(self):
+        """
+        Test if the template uses the correct URL or placeholder text for the edit and delete function.
+        """
+        wish = Wish.objects.all().first()
+        self.client.login(username="testuser2", password="testpassword")
+        response = self.client.get(reverse("other_wishes"))
+        self.assertContains(response, '<button type="submit">CLAIM</button>')
+        self.client.post(reverse("claim_wish", args=[wish.id]))
+        response = self.client.get(reverse("other_wishes"))
+        self.assertContains(response, '<button type="submit">UNCLAIM</button>')
+        self.client.logout()
+        self.client.login(username="testuser3", password="testpassword")
+        response = self.client.get(reverse("other_wishes"))
+        self.assertContains(response, 'CLAIMED')
+
+

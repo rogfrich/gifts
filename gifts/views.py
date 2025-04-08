@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from .models import Wish
 from .forms import WishForm, DeleteWishConfirmationForm
 from django.contrib.auth.views import LoginView, LogoutView
+from django.http import Http404, HttpResponse
+from django.views.decorators.http import require_POST
 
 class CustomLoginView(LoginView):
     template_name = 'gifts/login.html'
@@ -86,3 +88,28 @@ def delete_wish(request, wish_id):
         'form': DeleteWishConfirmationForm(),
     }
     return render(request, 'gifts/delete-wish.html', context=context)
+
+
+@require_POST
+@login_required
+def claim_wish(request, wish_id):
+    wish = get_object_or_404(Wish, id=wish_id)
+    if not wish.claimed and wish.claimed_by is None and wish.user != request.user:
+        wish.claimed = True
+        wish.claimed_by = request.user
+        wish.save()
+        return redirect('other_wishes')
+
+    return Http404("Wish already claimed or you are the owner of this wish.")
+    
+@require_POST
+@login_required
+def unclaim_wish(request, wish_id):
+    wish = get_object_or_404(Wish, id=wish_id)
+    if wish.claimed and wish.claimed_by == request.user:
+        wish.claimed = False
+        wish.claimed_by = None
+        wish.save()
+        return redirect('other_wishes')
+    
+    return Http404("Wish not claimed or you are not the claimer of this wish.")
