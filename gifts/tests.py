@@ -351,3 +351,205 @@ class DeleteWishTest(TestCase):
         self.assertEqual(response.status_code, 404)
         # Check if the wish still exists
         self.assertTrue(Wish.objects.filter(id=self.wish.id).exists())
+
+class OtherWishesTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser", password="testpassword"
+        )
+        self.client.login(username="testuser", password="testpassword")
+        for i in range(3):
+            Wish.objects.create(
+                user=self.user,
+                title=f"MY-WISH {i}",
+                detail=f"This is test wish {i}",
+                link="https://www.example.com",
+            )
+
+        self.client.logout()
+
+        self.user2 = User.objects.create_user(
+            username="testuser2", password="testpassword"
+        )
+        self.client.login(username="testuser2", password="testpassword")
+        for i in range(3):
+            Wish.objects.create(
+                user=self.user2,
+                title="OTHER-WISH",
+                detail=f"ONLY IN OTHER WISHES {i}",
+                link="https://www.example.com",
+            )
+        self.client.logout()
+
+    def test_other_wishes_context(self):
+        """
+        Test that only wishes from other users are shown in the context of other_wishes view.
+        """
+        self.client.login(username="testuser", password="testpassword")
+        response = self.client.get(reverse("other_wishes"))
+        for i in range(3):
+            self.assertContains(response, f"ONLY IN OTHER WISHES {i}")
+        self.assertNotContains(response, "MY-WISH")
+
+class ClaimUnclaimWishTest(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(username="testuser", password="testpassword")
+        self.user2 = User.objects.create_user(username="otheruser", password="otherpassword")
+
+        self.wish = Wish.objects.create(
+            user=self.user2,
+            title="Other User's Wish",
+            detail="A test wish description",
+            link="https://www.example.com",
+        )
+
+    def test_claim_and_unclaim(self):
+        self.client.login(username="testuser", password="testpassword")
+        response = self.client.post(reverse("claim_wish", args=[self.wish.id]))
+        self.assertEqual(response.status_code, 302)
+
+        wish = Wish.objects.get(id=self.wish.id)
+        self.assertTrue(wish.claimed)
+        self.assertEqual(wish.claimed_by, self.user1)
+
+        response = self.client.post(reverse("unclaim_wish", args=[self.wish.id]))
+        self.assertEqual(response.status_code, 302)
+
+        wish.refresh_from_db()
+        self.assertFalse(wish.claimed)
+        self.assertIsNone(wish.claimed_by)
+
+
+class TemplateUsesCorrectURLTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser", password="testpassword"
+        )
+        self.client.login(username="testuser", password="testpassword")
+        Wish.objects.create(
+            user=self.user,
+            title=f"MY-WISH",
+            detail=f"This is a test wish",
+            link="https://www.example.com",
+        )
+
+        self.client.logout()
+
+        self.user2 = User.objects.create_user(
+            username="testuser2", password="testpassword"
+        )
+
+        self.user3 = User.objects.create_user(
+            username="testuser3", password="testpassword"
+        )
+ 
+    def test_template_uses_correct_url(self):
+        """
+        Test if the template uses the correct URL or placeholder text for the edit and delete function.
+        """
+        wish = Wish.objects.all().first()
+        self.client.login(username="testuser2", password="testpassword")
+        response = self.client.get(reverse("other_wishes"))
+        self.assertContains(response, '<button type="submit">CLAIM</button>')
+        self.client.post(reverse("claim_wish", args=[wish.id]))
+        response = self.client.get(reverse("other_wishes"))
+        self.assertContains(response, '<button type="submit">UNCLAIM</button>')
+        self.client.logout()
+        self.client.login(username="testuser3", password="testpassword")
+        response = self.client.get(reverse("other_wishes"))
+        self.assertContains(response, 'CLAIMED')
+
+
+class OtherWishFilteringTest(TestCase):
+    def setUp(self):
+        for i in range(3):
+            user = User.objects.create_user(
+                username=f"testuser{i}", password="testpassword"
+            )
+            self.client.login(username=f"testuser{i}", password="testpassword")
+            Wish.objects.create(
+                user=user,
+                title=f"Wish for testuser{i}",
+                detail=f"This is test wish {i}",
+                link="https://www.example.com",
+            )
+            self.client.logout()
+
+    def test_other_wishes_filtering_default(self):
+        """
+        Test if the other_wishes view defaults to returning all other users' wishes.
+        """
+        # We should initially get all other users' wishes but not the logged in user's
+        self.client.login(username="testuser0", password="testpassword")
+        response = self.client.get(reverse("other_wishes"))
+        self.assertContains(response, "Wish for testuser1")
+        self.assertContains(response, "Wish for testuser2")
+        self.assertNotContains(response, "Wish for testuser0")
+
+    def test_other_wishes_filtering_by_recipient(self):
+        """
+        Test if the other_wishes view filters by recipient_id correctly.
+        """
+        self.client.login(username="testuser0", password="testpassword")
+
+        # Here we want testuser1's wishes only. The others should be filtered.
+        # testuser0's should be filtered because they are the logged in user.
+        # testuser2's should be filtered because they are not the selected recipient.
+        user_id = User.objects.get(username="testuser1").id
+        base_url = reverse("other_wishes")
+        query_string = f"?recipient_id={user_id}"
+        full_url = f"{base_url}{query_string}"
+        filtered_response = self.client.get(full_url)
+        self.assertNotContains(filtered_response, "Wish for testuser0")
+        self.assertContains(filtered_response, "Wish for testuser1")
+        self.assertNotContains(filtered_response, "Wish for testuser2")
+
+        
+class InvalidClaimTest(TestCase):
+    def setUp(self):
+        # Create three users: one wish owner, one valid claimer, one intruder
+        self.owner = User.objects.create_user(username="owner", password="testpassword")
+        self.claimer = User.objects.create_user(username="claimer", password="testpassword")
+        self.intruder = User.objects.create_user(username="intruder", password="testpassword")
+
+        # Owner's wish (initially unclaimed)
+        self.own_wish = Wish.objects.create(
+            user=self.owner,
+            title="Owner's Wish",
+            detail="Should not be claimable by the owner",
+        )
+
+        # Another wish that is already claimed by 'claimer'
+        self.claimed_wish = Wish.objects.create(
+            user=self.owner,
+            title="Claimed Wish",
+            detail="Already claimed",
+            claimed=True,
+            claimed_by=self.claimer,
+        )
+
+    def test_cannot_claim_own_wish(self):
+        """
+        Ensure a user cannot claim their own wish.
+        """
+        self.client.login(username="owner", password="testpassword")
+        response = self.client.post(reverse("claim_wish", args=[self.own_wish.id]))
+        self.assertEqual(response.status_code, 404)
+
+        # Confirm it wasn't claimed
+        self.own_wish.refresh_from_db()
+        self.assertFalse(self.own_wish.claimed)
+        self.assertIsNone(self.own_wish.claimed_by)
+
+    def test_cannot_claim_wish_already_claimed_by_another_user(self):
+        """
+        Ensure a user cannot claim a wish that has already been claimed by someone else.
+        """
+        self.client.login(username="intruder", password="testpassword")
+        response = self.client.post(reverse("claim_wish", args=[self.claimed_wish.id]))
+        self.assertEqual(response.status_code, 404)
+
+        # Confirm claim was not overwritten
+        self.claimed_wish.refresh_from_db()
+        self.assertTrue(self.claimed_wish.claimed)
+        self.assertEqual(self.claimed_wish.claimed_by, self.claimer)
