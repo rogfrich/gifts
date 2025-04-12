@@ -292,7 +292,7 @@ class EditViewTest(TestCase):
         """
         Test if a user cannot edit a wish that they do not own.
         """
-        other_user = User.objects.create_user(
+        User.objects.create_user(
             username="otheruser", password="otherpassword"
         )
         self.client.logout()
@@ -343,7 +343,7 @@ class DeleteWishTest(TestCase):
         """
         Test if a user cannot delete a wish that they do not own.
         """
-        other_user = User.objects.create_user(
+        User.objects.create_user(
             username="otheruser", password="otherpassword"
         )
         self.client.logout()
@@ -356,7 +356,7 @@ class DeleteWishTest(TestCase):
         """
         Test if a user cannot delete a wish that they do not own.
         """
-        other_user = User.objects.create_user(
+        User.objects.create_user(
             username="otheruser", password="otherpassword"
         )
         self.client.logout()
@@ -464,8 +464,8 @@ class TemplateUsesCorrectURLTest(TestCase):
         self.client.login(username="testuser", password="testpassword")
         Wish.objects.create(
             user=self.user,
-            title=f"MY-WISH",
-            detail=f"This is a test wish",
+            title="MY-WISH",
+            detail="This is a test wish",
             link="https://www.example.com",
         )
 

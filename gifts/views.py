@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from .models import Wish
 from .forms import WishForm, DeleteWishConfirmationForm
 from django.contrib.auth.views import LoginView, LogoutView
-from django.http import Http404, HttpResponse
+from django.http import Http404
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 from urllib.parse import urlencode
