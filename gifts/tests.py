@@ -391,45 +391,33 @@ class OtherWishesTest(TestCase):
             self.assertContains(response, f"ONLY IN OTHER WISHES {i}")
         self.assertNotContains(response, "MY-WISH")
 
-class ClaiUnclaimWishTest(TestCase):
+class ClaimUnclaimWishTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username="testuser", password="testpassword"
-        )
-        self.client.login(username="testuser", password="testpassword")
+        self.user1 = User.objects.create_user(username="testuser", password="testpassword")
+        self.user2 = User.objects.create_user(username="otheruser", password="otherpassword")
+
         self.wish = Wish.objects.create(
-            user=self.user,
-            title="Test Wish",
-            detail="A test wish description",
-            link="https://www.example.com",
-        )
-
-        self.client.logout()
-
-        self.user2 = User.objects.create_user(
-            username="otheruser", password="otherpassword"
-        )
-        self.client.login(username="otheruser", password="otherpassword")
-        self.wish2 = Wish.objects.create(
             user=self.user2,
             title="Other User's Wish",
             detail="A test wish description",
             link="https://www.example.com",
         )
-        self.client.logout()
-        before = Wish.objects.filter(claimed=True)
-        self.assertEqual(len(before), 0)
+
+    def test_claim_and_unclaim(self):
         self.client.login(username="testuser", password="testpassword")
-        response = self.client.post(reverse("claim_wish", args=[self.wish2.id]))
+        response = self.client.post(reverse("claim_wish", args=[self.wish.id]))
         self.assertEqual(response.status_code, 302)
-        after = Wish.objects.filter(claimed=True)
-        self.assertEqual(len(after), 1)
-        self.assertEqual(before[0].claimed_by, self.user)
-        response = self.client.post(reverse("unclaim_wish", args=[self.wish2.id]))
+
+        wish = Wish.objects.get(id=self.wish.id)
+        self.assertTrue(wish.claimed)
+        self.assertEqual(wish.claimed_by, self.user1)
+
+        response = self.client.post(reverse("unclaim_wish", args=[self.wish.id]))
         self.assertEqual(response.status_code, 302)
-        after = Wish.objects.filter(claimed=True)
-        self.assertEqual(len(after), 0)
-        self.assertEqual(after[0].claimed_by, None)
+
+        wish.refresh_from_db()
+        self.assertFalse(wish.claimed)
+        self.assertIsNone(wish.claimed_by)
 
 
 class TemplateUsesCorrectURLTest(TestCase):
@@ -471,4 +459,50 @@ class TemplateUsesCorrectURLTest(TestCase):
         response = self.client.get(reverse("other_wishes"))
         self.assertContains(response, 'CLAIMED')
 
+
+class OtherWishFilteringTest(TestCase):
+    def setUp(self):
+        for i in range(3):
+            self.user = User.objects.create_user(
+                username=f"testuser{i}", password="testpassword"
+            )
+            self.client.login(username=f"testuser{i}", password="testpassword")
+            Wish.objects.create(
+                user=self.user,
+                title=f"Wish for testuser{i}",
+                detail=f"This is test wish {i}",
+                link="https://www.example.com",
+            )
+            self.client.logout()
+
+    def test_other_wishes_filtering_default(self):
+        """
+        Test if the other_wishes view defaults to returning all other users' wishes.
+        """
+        # We should initially get all other users' wishes but not the logged in user's
+        self.client.login(username="testuser0", password="testpassword")
+        response = self.client.get(reverse("other_wishes"))
+        self.assertContains(response, "Wish for testuser1")
+        self.assertContains(response, "Wish for testuser2")
+        self.assertNotContains(response, "Wish for testuser0")
+
+    def test_other_wishes_filtering_by_recipient(self):
+        """
+        Test if the other_wishes view filters by recipient_id correctly.
+        """
+        self.client.login(username="testuser0", password="testpassword")
+
+        # Here we want testuser1's wishes only. The others should be filtered.
+        # testuser0's should be filtered because they are the logged in user.
+        # testuser2's should be filtered because they are not the selected recipient.
+        user_id = User.objects.get(username="testuser1").id
+        base_url = reverse("other_wishes")
+        query_string = f"?recipient_id={user_id}"
+        full_url = f"{base_url}{query_string}"
+        filtered_response = self.client.get(full_url)
+        self.assertNotContains(filtered_response, "Wish for testuser0")
+        self.assertContains(filtered_response, "Wish for testuser1")
+        self.assertNotContains(filtered_response, "Wish for testuser2")
+
+        
 
