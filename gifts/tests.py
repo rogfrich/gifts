@@ -140,6 +140,21 @@ class MyWishesViewTest(TestCase):
             )
         self.client.logout()
 
+        self.user_with_no_wishes = User.objects.create_user(
+            username="testuser3", password="testpassword"
+        )
+    def test_no_wishes_gives_message_not_table(self):
+        """
+        Test if the my_wishes view returns a message when there are no wishes.
+        """
+        self.client.login(username="testuser3", password="testpassword")
+        response = self.client.get(reverse("my_wishes"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "You have no wishes.")
+        self.assertNotContains(response, "<table>")
+        self.client.logout()
+
+
     def test_my_wishes_context(self):
         """
         Test if the context of my_wishes view contains the correct wishes.
@@ -380,6 +395,27 @@ class OtherWishesTest(TestCase):
                 link="https://www.example.com",
             )
         self.client.logout()
+
+        # Create a user with no wishes
+        self.user3 = User.objects.create_user(
+            username="testuser3", password="testpassword"
+        )
+        self.no_wish_user_id = self.user3.id
+
+    def test_other_wishes_no_wishes(self):
+        """
+        Test if the other_wishes view returns a message when there are no wishes.
+        """
+        self.client.login(username="testuser", password="testpassword")
+
+
+        response = self.client.get(
+            reverse("other_wishes") + f"?recipient_id={self.no_wish_user_id}"
+        )
+        self.assertContains(response, "No wishes available.")
+        self.assertNotContains(response, "<table>")
+        self.client.logout()
+
 
     def test_other_wishes_context(self):
         """
