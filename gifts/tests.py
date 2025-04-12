@@ -463,12 +463,12 @@ class TemplateUsesCorrectURLTest(TestCase):
 class OtherWishFilteringTest(TestCase):
     def setUp(self):
         for i in range(3):
-            self.user = User.objects.create_user(
+            user = User.objects.create_user(
                 username=f"testuser{i}", password="testpassword"
             )
             self.client.login(username=f"testuser{i}", password="testpassword")
             Wish.objects.create(
-                user=self.user,
+                user=user,
                 title=f"Wish for testuser{i}",
                 detail=f"This is test wish {i}",
                 link="https://www.example.com",
@@ -505,4 +505,51 @@ class OtherWishFilteringTest(TestCase):
         self.assertNotContains(filtered_response, "Wish for testuser2")
 
         
+class InvalidClaimTest(TestCase):
+    def setUp(self):
+        # Create three users: one wish owner, one valid claimer, one intruder
+        self.owner = User.objects.create_user(username="owner", password="testpassword")
+        self.claimer = User.objects.create_user(username="claimer", password="testpassword")
+        self.intruder = User.objects.create_user(username="intruder", password="testpassword")
 
+        # Owner's wish (initially unclaimed)
+        self.own_wish = Wish.objects.create(
+            user=self.owner,
+            title="Owner's Wish",
+            detail="Should not be claimable by the owner",
+        )
+
+        # Another wish that is already claimed by 'claimer'
+        self.claimed_wish = Wish.objects.create(
+            user=self.owner,
+            title="Claimed Wish",
+            detail="Already claimed",
+            claimed=True,
+            claimed_by=self.claimer,
+        )
+
+    def test_cannot_claim_own_wish(self):
+        """
+        Ensure a user cannot claim their own wish.
+        """
+        self.client.login(username="owner", password="testpassword")
+        response = self.client.post(reverse("claim_wish", args=[self.own_wish.id]))
+        self.assertEqual(response.status_code, 404)
+
+        # Confirm it wasn't claimed
+        self.own_wish.refresh_from_db()
+        self.assertFalse(self.own_wish.claimed)
+        self.assertIsNone(self.own_wish.claimed_by)
+
+    def test_cannot_claim_wish_already_claimed_by_another_user(self):
+        """
+        Ensure a user cannot claim a wish that has already been claimed by someone else.
+        """
+        self.client.login(username="intruder", password="testpassword")
+        response = self.client.post(reverse("claim_wish", args=[self.claimed_wish.id]))
+        self.assertEqual(response.status_code, 404)
+
+        # Confirm claim was not overwritten
+        self.claimed_wish.refresh_from_db()
+        self.assertTrue(self.claimed_wish.claimed)
+        self.assertEqual(self.claimed_wish.claimed_by, self.claimer)

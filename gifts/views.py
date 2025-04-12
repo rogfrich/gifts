@@ -128,7 +128,7 @@ def claim_wish(request, wish_id):
         wish.save()
         return redirect_with_recipient_param(request)
 
-    return Http404("Wish already claimed or you are the owner of this wish.")
+    raise Http404("Wish already claimed or you are the owner of this wish.")
     
 @require_POST
 @login_required
@@ -140,7 +140,7 @@ def unclaim_wish(request, wish_id):
         wish.save()
         return redirect_with_recipient_param(request)
     
-    return Http404("Wish not claimed or you are not the claimer of this wish.")
+    raise Http404("Wish not claimed or you are not the claimer of this wish.")
 
 def redirect_with_recipient_param(request, default_view='other_wishes'):
     recipient_id = request.GET.get('recipient_id')
