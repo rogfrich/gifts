@@ -66,7 +66,16 @@ def other_wishes(request):
 
 @login_required
 def my_claims(request):
-    return render(request, 'gifts/my-claims.html')
+    """
+    Get all wishes claimed by the current user
+    """
+    claims = Wish.objects.filter(claimed=True, claimed_by=request.user.id)
+
+
+    context = {
+        'claims': claims
+    }
+    return render(request, 'gifts/my-claims.html', context=context)
 
 
 @login_required
@@ -138,7 +147,13 @@ def unclaim_wish(request, wish_id):
         wish.claimed = False
         wish.claimed_by = None
         wish.save()
-        return redirect_with_recipient_param(request)
+        # Check if a next URL is provided in the POST data (only the case if coming from my_claims)
+        if 'next' in request.POST:
+            return redirect(request.POST['next'])
+        
+        # If no next URL is provided, redirect to the default view
+        else:
+            return redirect_with_recipient_param(request)
     
     raise Http404("Wish not claimed or you are not the claimer of this wish.")
 

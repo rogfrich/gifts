@@ -589,3 +589,59 @@ class InvalidClaimTest(TestCase):
         self.claimed_wish.refresh_from_db()
         self.assertTrue(self.claimed_wish.claimed)
         self.assertEqual(self.claimed_wish.claimed_by, self.claimer)
+
+class MyClaimsTest(TestCase):
+    def setUp(self):
+        self.claiming_user = User.objects.create_user(
+            username="claiming_user", password="testpassword"
+        )
+
+        self.user2 = User.objects.create_user(
+            username="testuser2", password="testpassword"
+        )
+
+        self.user3 = User.objects.create_user(
+            username="testuser3", password="testpassword"
+        )
+        self.client.login(username="testuser2", password="testpassword")
+        self.user2_wish_to_claim = Wish.objects.create(
+            user=self.user2,
+            title="User2's Wish SHOULD BE CLAIMED",
+            detail="A test wish description",
+            link="https://www.example.com",
+        )
+
+        self.user2_wish_to_not_claim = Wish.objects.create(
+            user=self.user2,
+            title="User2's Wish SHOULD NOT BE CLAIMED",
+            detail="A test wish description",
+            link="https://www.example.com",
+        )
+        self.client.logout()
+
+        self.client.login(username="testuser3", password="testpassword")
+        self.user3_wish_to_claim = Wish.objects.create(
+            user=self.user3,
+            title="User3's Wish SHOULD BE CLAIMED",
+            detail="A test wish description",
+            link="https://www.example.com",
+        )
+        self.user3_wish_to_not_claim = Wish.objects.create(
+            user=self.user3,
+            title="User3's Wish SHOULD NOT BE CLAIMED",
+            detail="A test wish description",
+            link="https://www.example.com",
+        )
+        self.client.logout()
+        self.client.login(username="claiming_user", password="testpassword")
+        self.client.post(reverse("claim_wish", args=[self.user2_wish_to_claim.id]))
+        self.client.post(reverse("claim_wish", args=[self.user3_wish_to_claim.id]))
+        response = self.client.get(reverse("my_claims"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "gifts/my-claims.html")
+        self.assertContains(response, "User2's Wish SHOULD BE CLAIMED")
+        self.assertContains(response, "User3's Wish SHOULD BE CLAIMED")
+        self.assertNotContains(response, "User2's Wish SHOULD NOT BE CLAIMED")
+        self.assertNotContains(response, "User3's Wish SHOULD NOT BE CLAIMED")
+        self.client.logout()
+

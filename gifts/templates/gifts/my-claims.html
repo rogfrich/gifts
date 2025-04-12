@@ -1,6 +1,44 @@
 {% extends 'gifts/base.html' %}
 
+
 {% block content %}
-This is a placeholder for my-claims.html
+
+{% if claims %}
+<table border="1">
+    <tr>
+        <td>User</td>
+        <td>Title</td>
+        <td>Detail</td>
+        <td>Link</td>
+        <td></td>
+    </tr>
+    {% for claim in claims %}
+    <tr>
+        <td>{{ claim.user.username }}</td>
+        <td>{{ claim.title }}</td>
+        <td>{{ claim.detail }}</td>
+        {% if claim.link %}
+        <td><a href="{{ claim.link }}">Link</a> </td>
+        {% else %}
+        <td>N/A</td>
+        {% endif %}
+        <td>
+            <form action="{% url 'unclaim_wish' claim.id %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'my_claims' %}">
+                <button type="submit">UNCLAIM</button>
+            </form>
+        </td>
+        
+    </tr>
+    {% endfor %}
+
+</table>
+{% else %}
+<p>You haven't claimed any wishes.</p>
+{% endif %}
+<br> 
+
+
 {% endblock %}
 
