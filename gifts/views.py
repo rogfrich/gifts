@@ -32,7 +32,7 @@ def my_wishes(request):
 
     return render(request, 'gifts/my-wishes.html', context=context)
 
-@login_required
+
 @login_required
 def other_wishes(request):
     User = get_user_model()
