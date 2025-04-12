@@ -1,10 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from .models import Wish
 from .forms import WishForm, DeleteWishConfirmationForm
 from django.contrib.auth.views import LoginView, LogoutView
 from django.http import Http404, HttpResponse
 from django.views.decorators.http import require_POST
+from django.urls import reverse
+from urllib.parse import urlencode
 
 class CustomLoginView(LoginView):
     template_name = 'gifts/login.html'
@@ -30,10 +33,35 @@ def my_wishes(request):
     return render(request, 'gifts/my-wishes.html', context=context)
 
 @login_required
+@login_required
 def other_wishes(request):
+    User = get_user_model()
+
+    # Get recipient_id from query params
+    recipient_id = request.GET.get('recipient_id')
+
+    # Normalize recipient_id (handle None, empty string, or "None")
+    try:
+        selected_recipient_id = int(recipient_id)
+    except (TypeError, ValueError):
+        selected_recipient_id = None
+
+    # Get all other users (for dropdown)
+    recipients = User.objects.exclude(id=request.user.id)
+
+    # Start with all wishes not created by the current user
+    wishes = Wish.objects.exclude(user=request.user)
+
+    # Apply filter if a specific recipient was selected
+    if selected_recipient_id is not None:
+        wishes = wishes.filter(user__id=selected_recipient_id)
+
     context = {
-        'wishes': Wish.objects.exclude(user=request.user)
+        'wishes': wishes,
+        'recipients': recipients,
+        'selected_recipient_id': selected_recipient_id,
     }
+
     return render(request, 'gifts/other-wishes.html', context=context)
 
 @login_required
@@ -98,7 +126,7 @@ def claim_wish(request, wish_id):
         wish.claimed = True
         wish.claimed_by = request.user
         wish.save()
-        return redirect('other_wishes')
+        return redirect_with_recipient_param(request)
 
     return Http404("Wish already claimed or you are the owner of this wish.")
     
@@ -110,6 +138,14 @@ def unclaim_wish(request, wish_id):
         wish.claimed = False
         wish.claimed_by = None
         wish.save()
-        return redirect('other_wishes')
+        return redirect_with_recipient_param(request)
     
     return Http404("Wish not claimed or you are not the claimer of this wish.")
+
+def redirect_with_recipient_param(request, default_view='other_wishes'):
+    recipient_id = request.GET.get('recipient_id')
+    if recipient_id:
+        url = reverse(default_view) + '?' + urlencode({'recipient_id': recipient_id})
+    else:
+        url = reverse(default_view)
+    return redirect(url)
