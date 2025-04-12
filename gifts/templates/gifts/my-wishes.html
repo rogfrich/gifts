@@ -4,6 +4,7 @@
 
 <br>
 <a href = {% url 'create_wish' %}>Create a new wish</a>
+{% if wishes %} 
 <table>
     <tr>
         <td>Tite</td>
@@ -26,6 +27,9 @@
     </tr>
     {% endfor %}
 </table>
+{% else %}
+<p>You have no wishes.</p>
+{% endif %}
 
 
 
