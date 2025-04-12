@@ -186,8 +186,8 @@ class LinkFieldBehaviourWithURLTest(TestCase):
         """
         response = self.client.get(reverse("my_wishes"))
         self.assertContains(
-            response, '<a href="https://www.example.com">Link</a>'
-        )  # Check if the link is rendered correctly
+            response, '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">Link</a>'
+        )
 
 
 class LinkFieldBehaviourWithoutURL(TestCase):
@@ -416,6 +416,17 @@ class OtherWishesTest(TestCase):
         self.assertNotContains(response, "<table>")
         self.client.logout()
 
+    def test_other_wishes_link(self):
+        """
+        Test if the other_wishes view returns the correct link.
+        """
+        self.client.login(username="testuser", password="testpassword")
+        response = self.client.get(reverse("other_wishes"))
+        self.assertContains(
+            response,
+            '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">Link</a>',
+        )
+
 
     def test_other_wishes_context(self):
         """
@@ -606,14 +617,14 @@ class MyClaimsTest(TestCase):
         self.client.login(username="testuser2", password="testpassword")
         self.user2_wish_to_claim = Wish.objects.create(
             user=self.user2,
-            title="User2's Wish SHOULD BE CLAIMED",
+            title="User2 SHOULD BE CLAIMED",
             detail="A test wish description",
             link="https://www.example.com",
         )
 
         self.user2_wish_to_not_claim = Wish.objects.create(
             user=self.user2,
-            title="User2's Wish SHOULD NOT BE CLAIMED",
+            title="User2 SHOULD NOT BE CLAIMED",
             detail="A test wish description",
             link="https://www.example.com",
         )
@@ -622,26 +633,41 @@ class MyClaimsTest(TestCase):
         self.client.login(username="testuser3", password="testpassword")
         self.user3_wish_to_claim = Wish.objects.create(
             user=self.user3,
-            title="User3's Wish SHOULD BE CLAIMED",
+            title="User3 SHOULD BE CLAIMED",
             detail="A test wish description",
             link="https://www.example.com",
         )
         self.user3_wish_to_not_claim = Wish.objects.create(
             user=self.user3,
-            title="User3's Wish SHOULD NOT BE CLAIMED",
+            title="User3 SHOULD NOT BE CLAIMED",
             detail="A test wish description",
             link="https://www.example.com",
         )
         self.client.logout()
+
+    def test_my_claims_view(self):    
         self.client.login(username="claiming_user", password="testpassword")
         self.client.post(reverse("claim_wish", args=[self.user2_wish_to_claim.id]))
         self.client.post(reverse("claim_wish", args=[self.user3_wish_to_claim.id]))
         response = self.client.get(reverse("my_claims"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "gifts/my-claims.html")
-        self.assertContains(response, "User2's Wish SHOULD BE CLAIMED")
-        self.assertContains(response, "User3's Wish SHOULD BE CLAIMED")
+        self.assertContains(response, "User2 SHOULD BE CLAIMED")
+        self.assertContains(response, "User3 SHOULD BE CLAIMED")
         self.assertNotContains(response, "User2's Wish SHOULD NOT BE CLAIMED")
         self.assertNotContains(response, "User3's Wish SHOULD NOT BE CLAIMED")
         self.client.logout()
 
+    def test_my_claims_link(self):
+        """
+        Test if the my_claims view returns the correct link.
+        """
+        self.client.login(username="claiming_user", password="testpassword")
+        self.client.post(reverse("claim_wish", args=[self.user2_wish_to_claim.id]))
+        self.client.post(reverse("claim_wish", args=[self.user3_wish_to_claim.id]))
+        response = self.client.get(reverse("my_claims"))
+        self.assertContains(
+            response,
+            '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">Link</a>',
+        )
+        self.client.logout()
