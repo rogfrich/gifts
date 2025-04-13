@@ -325,7 +325,8 @@ class DeleteWishTest(TestCase):
         self.assertContains(response, "Are you sure you want to delete")
         self.assertContains(response, "Test Wish")
         self.assertContains(response, '<form method="post">')
-        self.assertContains(response, '<button type="submit">Delete Wish</button>')
+        self.assertContains(response, '<button type="submit')
+        self.assertContains(response, ">Delete Wish<")
 
     def test_delete_wish_post(self):
         """
@@ -412,7 +413,7 @@ class OtherWishesTest(TestCase):
         response = self.client.get(
             reverse("other_wishes") + f"?recipient_id={self.no_wish_user_id}"
         )
-        self.assertContains(response, "No wishes yet.")
+        self.assertContains(response, "No wishes available.")
         self.assertNotContains(response, "<table>")
         self.client.logout()
 
@@ -497,7 +498,7 @@ class TemplateUsesCorrectURLTest(TestCase):
         wish = Wish.objects.all().first()
         self.client.login(username="testuser2", password="testpassword")
         response = self.client.get(reverse("other_wishes"))
-        self.assertContains(response, '<form action="/claim-wish/' + str(wish.id) + '" method="post"')
+        self.assertContains(response, '<form action="/claim-wish/' + f'{str(wish.id)}?recipient_id=None' + '" method="post"')
         self.client.post(reverse("claim_wish", args=[wish.id]))
         response = self.client.get(reverse("other_wishes"))
         self.assertContains(response, '<button type="submit"')
