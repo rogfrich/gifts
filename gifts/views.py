@@ -147,9 +147,10 @@ def unclaim_wish(request, wish_id):
         wish.claimed = False
         wish.claimed_by = None
         wish.save()
-        # Check if a next URL is provided in the POST data (only the case if coming from my_claims)
-        if 'next' in request.POST:
-            return redirect(request.POST['next'])
+        # Check if a next URL is provided in the query string (only the case if coming from my_claims)
+        next_url = request.GET.get('next')
+        if next_url:
+            return redirect(next_url)
         
         # If no next URL is provided, redirect to the default view
         else:

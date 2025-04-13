@@ -4,7 +4,7 @@
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Save Wish</button>
+    <button type="submit" class="btn btn-primary mb-3">Save Wish</button>
   </form>
-  <a href="{% url 'my_wishes' %}">Back to wishes</a>
+  <a href="{% url 'my_wishes' %}" class="btn btn-danger mb-3">Back to wishes</a>
 {% endblock %}
