@@ -150,7 +150,7 @@ class MyWishesViewTest(TestCase):
         self.client.login(username="testuser3", password="testpassword")
         response = self.client.get(reverse("my_wishes"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "You have no wishes.")
+        self.assertContains(response, "No wishes yet.")
         self.assertNotContains(response, "<table>")
         self.client.logout()
 
@@ -208,7 +208,7 @@ class LinkFieldBehaviourWithoutURL(TestCase):
         """
         response = self.client.get(reverse("my_wishes"))
         self.assertContains(
-            response, "<td>N/A</td>"
+            response, "N/A"
         )  # Check if the link is not rendered
 
 
@@ -412,7 +412,7 @@ class OtherWishesTest(TestCase):
         response = self.client.get(
             reverse("other_wishes") + f"?recipient_id={self.no_wish_user_id}"
         )
-        self.assertContains(response, "No wishes available.")
+        self.assertContains(response, "No wishes yet.")
         self.assertNotContains(response, "<table>")
         self.client.logout()
 
@@ -497,14 +497,15 @@ class TemplateUsesCorrectURLTest(TestCase):
         wish = Wish.objects.all().first()
         self.client.login(username="testuser2", password="testpassword")
         response = self.client.get(reverse("other_wishes"))
-        self.assertContains(response, '<button type="submit">CLAIM</button>')
+        self.assertContains(response, '<form action="/claim-wish/' + str(wish.id) + '" method="post"')
         self.client.post(reverse("claim_wish", args=[wish.id]))
         response = self.client.get(reverse("other_wishes"))
-        self.assertContains(response, '<button type="submit">UNCLAIM</button>')
+        self.assertContains(response, '<button type="submit"')
+        self.assertContains(response, '>Unclaim<')
         self.client.logout()
         self.client.login(username="testuser3", password="testpassword")
         response = self.client.get(reverse("other_wishes"))
-        self.assertContains(response, 'CLAIMED')
+        self.assertContains(response, 'Claimed')
 
 
 class OtherWishFilteringTest(TestCase):

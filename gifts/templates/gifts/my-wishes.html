@@ -4,32 +4,9 @@
 
 <br>
 <a href = {% url 'create_wish' %}>Create a new wish</a>
-{% if wishes %} 
-<table>
-    <tr>
-        <td>Tite</td>
-        <td>Detail</td>
-        <td>Link</td>
-        <td></td>
-        <td></td>
-    </tr>
-    {% for wish in wishes %}
-    <tr>
-        <td>{{ wish.title }}</td>
-        <td>{{ wish.detail }}</td>
-        {% if wish.link %}
-        <td><a href="{{ wish.link }}" target="_blank" rel="noopener noreferrer">Link</a> </td>
-        {% else %}
-        <td>N/A</td>
-        {% endif %}
-        <td><a href="{% url 'edit_wish' wish.id %}">Edit</a></td>
-        <td><a href="{% url 'delete_wish' wish.id %}">Delete</a>></td>
-    </tr>
-    {% endfor %}
-</table>
-{% else %}
-<p>You have no wishes.</p>
-{% endif %}
+
+
+{% include "gifts/_wish-table.html" with wishes=wishes empty_message="No wishes yet." show_claim_buttons=False allow_unclaim=False show_edit_controls=True %}
 
 
 
