@@ -14,9 +14,10 @@
     <div class="container d-flex justify-content-between align-items-center">
       <!-- App name/logo -->
       <a class="navbar-brand" href="{% url 'home' %}">🎁 Gifts App</a>
-  
+  {% if request.user.is_authenticated %}
       <!-- Navigation links + logout -->
       <div class="d-flex align-items-center gap-2">
+        <span>Hello, <strong>{{ request.user.username }}!</strong></span>
         <a class="btn btn-outline-primary" href="{% url 'my_wishes' %}">My Wishes</a>
         <a class="btn btn-outline-secondary" href="{% url 'other_wishes' %}">Other Wishes</a>
         <a class="btn btn-outline-success" href="{% url 'my_claims' %}">My Claims</a>
@@ -27,6 +28,8 @@
           <button type="submit" class="btn btn-danger">Logout</button>
         </form>
       </div>
+    {% endif %}
+
     </div>
   </nav>
 

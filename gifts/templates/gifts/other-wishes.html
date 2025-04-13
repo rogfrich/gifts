@@ -16,7 +16,6 @@
 </form>
 <br>
 
-{% include "gifts/_wish-table.html" with wishes=wishes empty_message="No wishes yet." show_claim_buttons=True allow_unclaim=False %}
-
+{% include "gifts/_wish-table.html" with wishes=wishes empty_message="No wishes available." show_claim_buttons=True allow_unclaim=False selected_recipient_id=selected_recipient_id %}
 
 {% endblock %}
