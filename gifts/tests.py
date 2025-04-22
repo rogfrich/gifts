@@ -266,6 +266,7 @@ class EditViewTest(TestCase):
         self.assertContains(response, "Test Wish")
         self.assertContains(response, "A test wish description")
         self.assertContains(response, "https://www.example.com")
+        self.assertContains(response, "Title *")
 
     def test_edit_wish_post(self):
         """
