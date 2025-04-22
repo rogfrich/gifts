@@ -2,18 +2,24 @@
 
 {% block content %}
 
-<form method="get">
-    <label for="recipient">Filter by recipient:</label>
-    <select name="recipient_id" id="recipient">
+<form method="get" class="row g-3 align-items-center mb-3">
+    <div class="col-auto">
+      <label for="recipient" class="col-form-label">Filter by recipient:</label>
+    </div>
+    <div class="col-auto">
+      <select name="recipient_id" id="recipient" class="form-select">
         <option value="">-- All --</option>
         {% for recipient in recipients %}
-            <option value="{{ recipient.id }}" {% if recipient.id == selected_recipient_id %}selected{% endif %}>
-                {{ recipient.username }}
-            </option>
+          <option value="{{ recipient.id }}" {% if recipient.id == selected_recipient_id %}selected{% endif %}>
+            {{ recipient.username }}
+          </option>
         {% endfor %}
-    </select>
-    <button type="submit">Apply</button>
-</form>
+      </select>
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-outline-primary">Apply</button>
+    </div>
+  </form>
 <br>
 
 {% include "gifts/_wish-table.html" with wishes=wishes empty_message="No wishes available." show_claim_buttons=True allow_unclaim=False selected_recipient_id=selected_recipient_id %}

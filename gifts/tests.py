@@ -324,7 +324,7 @@ class DeleteWishTest(TestCase):
         self.assertTemplateUsed(response, "gifts/delete-wish.html")
         self.assertContains(response, "Are you sure you want to delete")
         self.assertContains(response, "Test Wish")
-        self.assertContains(response, '<form method="post">')
+        self.assertContains(response, '<form method="post"')
         self.assertContains(response, '<button type="submit')
         self.assertContains(response, ">Delete Wish<")
 
