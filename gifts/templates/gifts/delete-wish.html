@@ -1,15 +1,13 @@
 {% extends 'gifts/base.html' %}
 
 {% block content %}
-  <h2>Delete Wish</h2>
-  <p>Are you sure you want to delete the wish "{{ wish.title }}"?</p>
-  <form method="post">
+  <h2 class="mb-4">Delete Wish</h2>
+
+  <form method="post" class="mt-3">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-danger mb-3">Delete Wish</button>
+    <p>Are you sure you want to delete the wish <strong>{{ wish.title }}</strong>?</p>
+    <button type="submit" class="btn btn-danger">Delete Wish</button>
+    <a href="{% url 'my_wishes' %}" class="btn btn-secondary">Cancel</a>
   </form>
 
-
-
-  <a href="{% url 'my_wishes' %}">Cancel</a>
 {% endblock %}

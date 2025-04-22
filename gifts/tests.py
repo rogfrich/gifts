@@ -266,6 +266,7 @@ class EditViewTest(TestCase):
         self.assertContains(response, "Test Wish")
         self.assertContains(response, "A test wish description")
         self.assertContains(response, "https://www.example.com")
+        self.assertContains(response, "Title *")
 
     def test_edit_wish_post(self):
         """
@@ -324,7 +325,7 @@ class DeleteWishTest(TestCase):
         self.assertTemplateUsed(response, "gifts/delete-wish.html")
         self.assertContains(response, "Are you sure you want to delete")
         self.assertContains(response, "Test Wish")
-        self.assertContains(response, '<form method="post">')
+        self.assertContains(response, '<form method="post"')
         self.assertContains(response, '<button type="submit')
         self.assertContains(response, ">Delete Wish<")
 
