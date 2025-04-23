@@ -132,3 +132,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'my_wishes'
 LOGOUT_REDIRECT_URL = 'login'
+
+EXPORT_PATH = os.path.join(BASE_DIR, os.getenv("EXPORT_PATH"))
