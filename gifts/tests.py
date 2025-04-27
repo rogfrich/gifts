@@ -145,6 +145,7 @@ class MyWishesViewTest(TestCase):
         self.user_with_no_wishes = User.objects.create_user(
             username="testuser3", password="testpassword"
         )
+
     def test_no_wishes_gives_message_not_table(self):
         """
         Test if the my_wishes view returns a message when there are no wishes.
@@ -155,7 +156,6 @@ class MyWishesViewTest(TestCase):
         self.assertContains(response, "No wishes yet.")
         self.assertNotContains(response, "<table>")
         self.client.logout()
-
 
     def test_my_wishes_context(self):
         """
@@ -188,7 +188,8 @@ class LinkFieldBehaviourWithURLTest(TestCase):
         """
         response = self.client.get(reverse("my_wishes"))
         self.assertContains(
-            response, '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">Link</a>'
+            response,
+            '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">Link</a>',
         )
 
 
@@ -209,9 +210,7 @@ class LinkFieldBehaviourWithoutURL(TestCase):
         Test if the link field behaves correctly when no URL is provided.
         """
         response = self.client.get(reverse("my_wishes"))
-        self.assertContains(
-            response, "N/A"
-        )  # Check if the link is not rendered
+        self.assertContains(response, "N/A")  # Check if the link is not rendered
 
 
 class CreateWishViewTest(TestCase):
@@ -295,9 +294,7 @@ class EditViewTest(TestCase):
         """
         Test if a user cannot edit a wish that they do not own.
         """
-        User.objects.create_user(
-            username="otheruser", password="otherpassword"
-        )
+        User.objects.create_user(username="otheruser", password="otherpassword")
         self.client.logout()
         self.client.login(username="otheruser", password="otherpassword")
 
@@ -347,9 +344,7 @@ class DeleteWishTest(TestCase):
         """
         Test if a user cannot delete a wish that they do not own.
         """
-        User.objects.create_user(
-            username="otheruser", password="otherpassword"
-        )
+        User.objects.create_user(username="otheruser", password="otherpassword")
         self.client.logout()
         self.client.login(username="otheruser", password="otherpassword")
 
@@ -360,9 +355,7 @@ class DeleteWishTest(TestCase):
         """
         Test if a user cannot delete a wish that they do not own.
         """
-        User.objects.create_user(
-            username="otheruser", password="otherpassword"
-        )
+        User.objects.create_user(username="otheruser", password="otherpassword")
         self.client.logout()
         self.client.login(username="otheruser", password="otherpassword")
 
@@ -370,6 +363,7 @@ class DeleteWishTest(TestCase):
         self.assertEqual(response.status_code, 404)
         # Check if the wish still exists
         self.assertTrue(Wish.objects.filter(id=self.wish.id).exists())
+
 
 class OtherWishesTest(TestCase):
     def setUp(self):
@@ -412,7 +406,6 @@ class OtherWishesTest(TestCase):
         """
         self.client.login(username="testuser", password="testpassword")
 
-
         response = self.client.get(
             reverse("other_wishes") + f"?recipient_id={self.no_wish_user_id}"
         )
@@ -431,7 +424,6 @@ class OtherWishesTest(TestCase):
             '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">Link</a>',
         )
 
-
     def test_other_wishes_context(self):
         """
         Test that only wishes from other users are shown in the context of other_wishes view.
@@ -442,10 +434,15 @@ class OtherWishesTest(TestCase):
             self.assertContains(response, f"ONLY IN OTHER WISHES {i}")
         self.assertNotContains(response, "MY-WISH")
 
+
 class ClaimUnclaimWishTest(TestCase):
     def setUp(self):
-        self.user1 = User.objects.create_user(username="testuser", password="testpassword")
-        self.user2 = User.objects.create_user(username="otheruser", password="otherpassword")
+        self.user1 = User.objects.create_user(
+            username="testuser", password="testpassword"
+        )
+        self.user2 = User.objects.create_user(
+            username="otheruser", password="otherpassword"
+        )
 
         self.wish = Wish.objects.create(
             user=self.user2,
@@ -493,7 +490,7 @@ class TemplateUsesCorrectURLTest(TestCase):
         self.user3 = User.objects.create_user(
             username="testuser3", password="testpassword"
         )
- 
+
     def test_template_uses_correct_url(self):
         """
         Test if the template uses the correct URL or placeholder text for the edit and delete function.
@@ -501,15 +498,20 @@ class TemplateUsesCorrectURLTest(TestCase):
         wish = Wish.objects.all().first()
         self.client.login(username="testuser2", password="testpassword")
         response = self.client.get(reverse("other_wishes"))
-        self.assertContains(response, '<form action="/claim-wish/' + f'{str(wish.id)}?recipient_id=None' + '" method="post"')
+        self.assertContains(
+            response,
+            '<form action="/claim-wish/'
+            + f"{str(wish.id)}?recipient_id=None"
+            + '" method="post"',
+        )
         self.client.post(reverse("claim_wish", args=[wish.id]))
         response = self.client.get(reverse("other_wishes"))
         self.assertContains(response, '<button type="submit"')
-        self.assertContains(response, '>Unclaim<')
+        self.assertContains(response, ">Unclaim<")
         self.client.logout()
         self.client.login(username="testuser3", password="testpassword")
         response = self.client.get(reverse("other_wishes"))
-        self.assertContains(response, 'Claimed')
+        self.assertContains(response, "Claimed")
 
 
 class OtherWishFilteringTest(TestCase):
@@ -556,13 +558,17 @@ class OtherWishFilteringTest(TestCase):
         self.assertContains(filtered_response, "Wish for testuser1")
         self.assertNotContains(filtered_response, "Wish for testuser2")
 
-        
+
 class InvalidClaimTest(TestCase):
     def setUp(self):
         # Create three users: one wish owner, one valid claimer, one intruder
         self.owner = User.objects.create_user(username="owner", password="testpassword")
-        self.claimer = User.objects.create_user(username="claimer", password="testpassword")
-        self.intruder = User.objects.create_user(username="intruder", password="testpassword")
+        self.claimer = User.objects.create_user(
+            username="claimer", password="testpassword"
+        )
+        self.intruder = User.objects.create_user(
+            username="intruder", password="testpassword"
+        )
 
         # Owner's wish (initially unclaimed)
         self.own_wish = Wish.objects.create(
@@ -605,6 +611,7 @@ class InvalidClaimTest(TestCase):
         self.claimed_wish.refresh_from_db()
         self.assertTrue(self.claimed_wish.claimed)
         self.assertEqual(self.claimed_wish.claimed_by, self.claimer)
+
 
 class MyClaimsTest(TestCase):
     def setUp(self):
@@ -650,7 +657,7 @@ class MyClaimsTest(TestCase):
         )
         self.client.logout()
 
-    def test_my_claims_view(self):    
+    def test_my_claims_view(self):
         self.client.login(username="claiming_user", password="testpassword")
         self.client.post(reverse("claim_wish", args=[self.user2_wish_to_claim.id]))
         self.client.post(reverse("claim_wish", args=[self.user3_wish_to_claim.id]))
@@ -679,42 +686,72 @@ class MyClaimsTest(TestCase):
 
 
 class CustomContextProcessorTest(TestCase):
-    
     def setUp(self):
         """
-        Create a user, log in, and show that the response contains the correct footer text, 
-        which is driven by the ENVIRONMENT and DATABASE_NAME context processors.  
+        Create a user so that the test client can log in and retrieve a page that doesn't
+        return a 302 redirect.
         """
         User.objects.create_user(
             username="user1",
             password="password",
         )
 
-    @patch.dict(os.environ, {"ENVIRONMENT": "dev"})
-    def test_dev_environment_context(self):
+    def login_and_get(self):
         self.client.login(username="user1", password="password")
-        response = self.client.get(reverse('my_wishes'))
+        return self.client.get(reverse("my_wishes"))
+
+    @patch.dict(
+        os.environ, {"ENVIRONMENT": "dev", "DATABASE_NAME": "context-test.sqlite3"}
+    )
+    def test_dev_environment_context(self):
+        """
+        When running in dev, all of the custom context should be rendered.
+        """
+        response = self.login_and_get()
         self.assertContains(response, "Thank you for using Gifts. Happy gifting!")
         self.assertContains(response, 'Environment: "dev"')
-        self.assertContains(response, os.getenv("DATABASE_NAME"))
-        
+        self.assertContains(response, "Database: context-test.sqlite3")
 
-    @patch.dict(os.environ, {"ENVIRONMENT": "qa"})
+    @patch.dict(
+        os.environ, {"ENVIRONMENT": "qa", "DATABASE_NAME": "context-test.sqlite3"}
+    )
     def test_qa_environment_context(self):
-        self.client.login(username="user1", password="password")
-        response = self.client.get(reverse('my_wishes'))
+        """
+        When running in qa, the environemnt should be rendered, but not the DB name.
+        """
+
+        response = self.login_and_get()
         self.assertContains(response, "Thank you for using Gifts. Happy gifting!")
         self.assertContains(response, 'Environment: "qa"')
         self.assertNotContains(response, "Database:")
-        self.assertNotContains(response, os.getenv("DATABASE_NAME"))
-        
+        self.assertNotContains(response, "context-test.sqlite3")
 
-    @patch.dict(os.environ, {"ENVIRONMENT": "prod"})
+    @patch.dict(
+        os.environ, {"ENVIRONMENT": "prod", "DATABASE_NAME": "context-test.sqlite3"}
+    )
     def test_prod_environment_context(self):
-        self.client.login(username="user1", password="password")
-        response = self.client.get(reverse('my_wishes'))
+        """
+        When running in prod, we should not see either the environment or the DB name.
+        """
+        response = self.login_and_get()
         self.assertContains(response, "Thank you for using Gifts. Happy gifting!")
-        self.assertNotContains(response, 'Environment:')
+        self.assertNotContains(response, "Environment:")
         self.assertNotContains(response, "prod")
         self.assertNotContains(response, "Database:")
-        self.assertNotContains(response, os.getenv("DATABASE_NAME"))
+        self.assertNotContains(response, "context-test.sqlite3")
+
+    @patch.dict(os.environ, {}, clear=True)
+    def test_missing_environment_context(self):
+        """
+        If the ENVIRONMENT env var isn't set, we should get a 'cannot determine' message.
+        """
+        response = self.login_and_get()
+        self.assertContains(response, "Environment: cannot determine")
+
+    @patch.dict(os.environ, {"ENVIRONMENT": "notvalid"})
+    def test_invalid_environment_context(self):
+        """
+        If the ENVIRONMENT env var has an invalid value, we should get a 'cannot determine' message.
+        """
+        response = self.login_and_get()
+        self.assertContains(response, "Environment: cannot determine")
