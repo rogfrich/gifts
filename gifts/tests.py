@@ -1,7 +1,9 @@
+from unittest.mock import patch
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse, resolve
 from .models import Wish  # Updated import to Wish
+import os
 
 from .views import my_wishes, other_wishes, my_claims
 
@@ -674,3 +676,45 @@ class MyClaimsTest(TestCase):
             '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">Link</a>',
         )
         self.client.logout()
+
+
+class CustomContextProcessorTest(TestCase):
+    
+    def setUp(self):
+        """
+        Create a user, log in, and show that the response contains the correct footer text, 
+        which is driven by the ENVIRONMENT and DATABASE_NAME context processors.  
+        """
+        User.objects.create_user(
+            username="user1",
+            password="password",
+        )
+
+    @patch.dict(os.environ, {"ENVIRONMENT": "dev"})
+    def test_dev_environment_context(self):
+        self.client.login(username="user1", password="password")
+        response = self.client.get(reverse('my_wishes'))
+        self.assertContains(response, "Thank you for using Gifts. Happy gifting!")
+        self.assertContains(response, 'Environment: "dev"')
+        self.assertContains(response, os.getenv("DATABASE_NAME"))
+        
+
+    @patch.dict(os.environ, {"ENVIRONMENT": "qa"})
+    def test_qa_environment_context(self):
+        self.client.login(username="user1", password="password")
+        response = self.client.get(reverse('my_wishes'))
+        self.assertContains(response, "Thank you for using Gifts. Happy gifting!")
+        self.assertContains(response, 'Environment: "qa"')
+        self.assertNotContains(response, "Database:")
+        self.assertNotContains(response, os.getenv("DATABASE_NAME"))
+        
+
+    @patch.dict(os.environ, {"ENVIRONMENT": "prod"})
+    def test_prod_environment_context(self):
+        self.client.login(username="user1", password="password")
+        response = self.client.get(reverse('my_wishes'))
+        self.assertContains(response, "Thank you for using Gifts. Happy gifting!")
+        self.assertNotContains(response, 'Environment:')
+        self.assertNotContains(response, "prod")
+        self.assertNotContains(response, "Database:")
+        self.assertNotContains(response, os.getenv("DATABASE_NAME"))
