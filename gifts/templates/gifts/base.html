@@ -8,7 +8,6 @@
   integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
 </head>
 <body>
-  
   <!-- Global navbar -->
   <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
     <div class="container d-flex justify-content-between align-items-center">
@@ -41,8 +40,18 @@
 
   <!-- Optional footer -->
   <footer class="text-center text-muted mt-5 mb-3">
-    <small>Environment: "{{ ENVIRONMENT }}"</small> <br>
-      <small>Database: {{ DATABASE_NAME }}</small>
+    <small>
+        Thank you for using Gifts. Happy gifting!<br><br>
+        {% if ENVIRONMENT == 'dev' %}
+            Environment: "{{ ENVIRONMENT }}"<br>
+            Database: {{ DATABASE_NAME }}
+        {% elif ENVIRONMENT == "qa" %}
+            Environment: "{{ ENVIRONMENT }}"<br>
+        {% elif ENVIRONMENT == "unknown" %}
+            Environment: cannot determine 
+        {% endif %}
+        
+    </small> 
   </footer>
 
   <!-- Optional Bootstrap JS -->
