@@ -113,11 +113,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# If USE-TZ = True, Django uses UTC under the hood - this setting just affects what's displayed. 
+TIME_ZONE = "Europe/London" 
+
+USE_TZ = True  # (this should stay True unless you have a strong reason)
 
 USE_I18N = True
-
-USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
