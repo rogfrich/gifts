@@ -2,6 +2,10 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse, resolve
+from django.core import mail
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
 from .models import Wish  # Updated import to Wish
 import os
 
@@ -691,7 +695,7 @@ class CustomContextProcessorTest(TestCase):
         Create a user so that the test client can log in and retrieve a page that doesn't
         return a 302 redirect.
         """
-        User.objects.create_user(
+        self.user = User.objects.create_user(
             username="user1",
             password="password",
         )
@@ -755,3 +759,66 @@ class CustomContextProcessorTest(TestCase):
         """
         response = self.login_and_get()
         self.assertContains(response, "Environment: cannot determine")
+
+class TestPasswordResetFlow(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(
+            username = "user1",
+            password = "password",
+            email = "user1@example.com"
+        )
+
+    def test_reset_request_page(self):
+        response = self.client.get(reverse("password_reset"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "registration/password_reset_form.html")
+        self.assertContains(response, ">Email address<")
+
+    
+    def test_submitting_email_triggers_correct_behaviour(self):
+        response = self.client.post(reverse('password_reset'), data={'email': 'user1@example.com'}, follow=True)
+        self.assertTemplateUsed(response, 'registration/password_reset_done.html')
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertIn('user1@example.com', email.to)
+        self.assertIn('Password reset', email.subject)
+        self.assertIn("You're receiving this email because you requested a password reset", email.body)
+
+
+
+    def test_password_reset_done_page(self):
+        response = self.client.get(reverse("password_reset_done"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "registration/password_reset_done.html")
+        self.assertContains(response, "Check your inbox")
+
+
+    def test_reset_token(self):
+        user = self.user1
+        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+
+        reset_url = reverse('password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
+
+        # 1. GET the password reset confirm page (follow redirects)
+        response = self.client.get(reset_url, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/password_reset_confirm.html')
+
+        # 2. Find the final URL where form should POST
+        final_reset_url = response.request["PATH_INFO"]
+
+        # 3. POST the new password form to the *final* URL
+        new_password = "MyNewSecurePassword123!"
+        response = self.client.post(final_reset_url, {
+            'new_password1': new_password,
+            'new_password2': new_password,
+        }, follow=True)
+
+        # 4. Assert password reset complete page shown
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/password_reset_complete.html')
+
+        # 5. Check login works with new password
+        login_success = self.client.login(username=user.username, password=new_password)
+        self.assertTrue(login_success)
