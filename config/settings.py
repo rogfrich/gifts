@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+ENVIRONMENT = os.getenv('ENVIRONMENT')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -135,3 +136,15 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'my_wishes'
 LOGOUT_REDIRECT_URL = 'login'
 
+# Email settings
+if ENVIRONMENT == "dev":
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    # Populate this later when I've got Mailgun set up
+    # EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    # EMAIL_HOST = "smtp.yourprovider.com"
+    # EMAIL_PORT = 587
+    # EMAIL_USE_TLS = True
+    # EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+    # EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+    pass
