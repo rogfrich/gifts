@@ -29,7 +29,7 @@ from gifts.models import Wish
 
 
 
-def export_users(export_path):
+def export_users(export_path, verbose):
     """
     Export all users to a CSV file.
     """
@@ -43,10 +43,11 @@ def export_users(export_path):
             writer.writerow(
                 {"id": user.id, "username": user.username, "email": user.email}
             )
-    print(f"Exported {users.count()} users to {os.path.join(export_path, 'users.csv')}")
+    if verbose:
+        print(f"Exported {users.count()} users to {os.path.join(export_path, 'users.csv')}")
 
 
-def export_wishes(export_path):
+def export_wishes(export_path, verbose):
     """
     Export all wishes to a CSV file.
     """
@@ -82,18 +83,20 @@ def export_wishes(export_path):
                     "updated_at": wish.updated_at,
                 }
             )
-    print(
-        f"Exported {wishes.count()} wishes to {os.path.join(export_path, 'wishes.csv')}"
-    )
+    if verbose:
+        print(
+            f"Exported {wishes.count()} wishes to {os.path.join(export_path, 'wishes.csv')}"
+        )
 
 
-def export_all(export_path):
+def export_all(export_path, verbose=False):
     """
     Export all data to CSV files.
     """
-    export_users(export_path)
-    export_wishes(export_path)
-    print("Exported all data.")
+    export_users(export_path, verbose)
+    export_wishes(export_path, verbose)
+    if verbose:
+        print("Exported all data.")
 
 
 if __name__ == "__main__":
@@ -108,4 +111,4 @@ if __name__ == "__main__":
         os.makedirs(export_path)
         print(f"Created directory: {export_path}")
 
-    export_all(export_path)
+    export_all(export_path, verbose=True)
