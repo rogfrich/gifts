@@ -44,7 +44,7 @@ class TestImporter(TestCase):
         )
 
         # Step 2: Export the clean database
-        export_all(export_path=self.temp_dir)
+        export_all(export_path=self.temp_dir, verbose=False)
 
         # Step 3: CORRUPT the database AFTER export
         wish = Wish.objects.get(title="Wish 1")
