@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta charset="UTF-8">
   <title>{% block title %}Wish App{% endblock %}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -10,25 +11,41 @@
 <body>
   <!-- Global navbar -->
   <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
-    <div class="container d-flex justify-content-between align-items-center">
+    <div class="container">
       <!-- App name/logo -->
       <a class="navbar-brand" href="{% url 'home' %}">🎁 Gifts App</a>
-  {% if request.user.is_authenticated %}
-      <!-- Navigation links + logout -->
-      <div class="d-flex align-items-center gap-2">
-        <span>Hello, <strong>{{ request.user.username }}!</strong></span>
-        <a class="btn btn-outline-primary" href="{% url 'my_wishes' %}">My Wishes</a>
-        <a class="btn btn-outline-secondary" href="{% url 'other_wishes' %}">Other Wishes</a>
-        <a class="btn btn-outline-success" href="{% url 'my_claims' %}">My Claims</a>
   
-        <!-- Logout form -->
-        <form method="post" action="{% url 'logout' %}" class="d-inline">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-danger">Logout</button>
-        </form>
-      </div>
-    {% endif %}
-
+      {% if request.user.is_authenticated %}
+        <!-- Toggler (hamburger icon) -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+                aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+  
+        <!-- Collapsible content -->
+        <div class="collapse navbar-collapse" id="navbarContent">
+          <ul class="navbar-nav ms-auto d-flex align-items-lg-center gap-2">
+            <li class="nav-item">
+              <span class="nav-link">Hello, <strong>{{ request.user.username }}!</strong></span>
+            </li>
+            <li class="nav-item">
+              <a class="btn btn-outline-primary" href="{% url 'my_wishes' %}">My Wishes</a>
+            </li>
+            <li class="nav-item">
+              <a class="btn btn-outline-secondary" href="{% url 'other_wishes' %}">Other Wishes</a>
+            </li>
+            <li class="nav-item">
+              <a class="btn btn-outline-success" href="{% url 'my_claims' %}">My Claims</a>
+            </li>
+            <li class="nav-item">
+              <form method="post" action="{% url 'logout' %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Logout</button>
+              </form>
+            </li>
+          </ul>
+        </div>
+      {% endif %}
     </div>
   </nav>
 
