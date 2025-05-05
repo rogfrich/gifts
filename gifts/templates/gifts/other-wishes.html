@@ -1,27 +1,20 @@
 {% extends 'gifts/base.html' %}
 
 {% block content %}
-
-<form method="get" class="row g-3 align-items-center mb-3">
-    <div class="col-auto">
-      <label for="recipient" class="col-form-label">Filter by recipient:</label>
-    </div>
-    <div class="col-auto">
-      <select name="recipient_id" id="recipient" class="form-select">
-        <option value="">-- All --</option>
-        {% for recipient in recipients %}
-          <option value="{{ recipient.id }}" {% if recipient.id == selected_recipient_id %}selected{% endif %}>
-            {{ recipient.username }}
-          </option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="col-auto">
-      <button type="submit" class="btn btn-outline-primary">Apply</button>
-    </div>
+  <form method="get" class="mb-4">
+    <label for="recipient_id">Select a user:</label>
+    <select name="recipient_id" id="recipient_id" class="form-select d-inline w-auto mx-2">
+      {% for recipient in recipients %}
+        <option value="{{ recipient.id }}" {% if selected_recipient and recipient.id == selected_recipient.id %}selected{% endif %}>
+          {{ recipient.username }}
+        </option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary">Show Wishes</button>
   </form>
-<br>
 
-{% include "gifts/_wish-table.html" with wishes=wishes empty_message="No wishes available." show_claim_buttons=True allow_unclaim=False selected_recipient_id=selected_recipient_id %}
-
+  {% if selected_recipient %}
+    <h5>Wishes for {{ selected_recipient.username }}</h5>
+    {% include "gifts/_wish-table-other.html" with wishes=wishes selected_recipient_id=selected_recipient.id empty_message="No wishes found for this user." %}
+  {% endif %}
 {% endblock %}

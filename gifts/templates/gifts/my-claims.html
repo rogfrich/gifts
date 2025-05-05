@@ -3,7 +3,44 @@
 
 {% block content %}
 
-{% include "gifts/_wish-table.html" with wishes=claims empty_message="No claims yet." show_claim_buttons=False allow_unclaim=True %}
+
+{% for recipient, wishes in claims_by_user.items %}
+    <section>
+    <h4 class="mt-4 text-secondary fw-semibold">Wishes for {{ recipient.username }}</h4>  <div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Title</th>
+          <th>Detail</th>
+          <th class="action-column">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for wish in wishes %}
+          <tr>
+            <td>
+              {% if wish.link %}
+                <a href="{{ wish.link }}" target="_blank" rel="noopener noreferrer">{{ wish.title }}</a>
+              {% else %}
+                {{ wish.title }}
+              {% endif %}
+            </td>
+            <td>{{ wish.detail }}</td>
+            <td class="action-column">
+              <form action="{% url 'unclaim_wish' wish.id %}?next={{ request.path }}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-warning">Unclaim</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  </section>
+{% empty %}
+  <p class="text-muted">You haven't claimed any wishes yet.</p>
+{% endfor %}
 
 
 {% endblock %}

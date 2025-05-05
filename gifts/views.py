@@ -8,6 +8,8 @@ from django.http import Http404
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 from urllib.parse import urlencode
+from django.contrib.auth.models import User
+from django.contrib import messages
 
 class CustomLoginView(LoginView):
     template_name = 'gifts/login.html'
@@ -35,45 +37,39 @@ def my_wishes(request):
 
 @login_required
 def other_wishes(request):
-    User = get_user_model()
+    recipient_id = request.GET.get("recipient_id")
+    wishes = []
 
-    # Get recipient_id from query params
-    recipient_id = request.GET.get('recipient_id')
-
-    # Normalize recipient_id (handle None, empty string, or "None")
-    try:
-        selected_recipient_id = int(recipient_id)
-    except (TypeError, ValueError):
-        selected_recipient_id = None
-
-    # Get all other users (for dropdown)
-    recipients = User.objects.exclude(id=request.user.id)
-
-    # Start with all wishes not created by the current user
-    wishes = Wish.objects.exclude(user=request.user)
-
-    # Apply filter if a specific recipient was selected
-    if selected_recipient_id is not None:
-        wishes = wishes.filter(user__id=selected_recipient_id)
+    if recipient_id:
+        try:
+            recipient = User.objects.get(pk=recipient_id)
+            wishes = Wish.objects.filter(user=recipient).exclude(claimed_by=request.user)
+        except User.DoesNotExist:
+            recipient = None
+    else:
+        recipient = None
 
     context = {
-        'wishes': wishes,
-        'recipients': recipients,
-        'selected_recipient_id': selected_recipient_id,
+        "recipients": User.objects.exclude(pk=request.user.pk),
+        "selected_recipient": recipient,
+        "wishes": wishes,
     }
-
-    return render(request, 'gifts/other-wishes.html', context=context)
+    return render(request, "gifts/other-wishes.html", context)
 
 @login_required
 def my_claims(request):
     """
     Get all wishes claimed by the current user
     """
-    claims = Wish.objects.filter(claimed=True, claimed_by=request.user.id)
-
+    claims_by_user = {}
+    all_claims = Wish.objects.filter(claimed=True, claimed_by=request.user)
+    for user in User.objects.exclude(id=request.user.id):
+        claims_for_this_user = all_claims.filter(user=user)
+        if claims_for_this_user.exists():
+            claims_by_user[user] = claims_for_this_user
 
     context = {
-        'claims': claims
+        'claims_by_user': claims_by_user
     }
     return render(request, 'gifts/my-claims.html', context=context)
 
@@ -135,6 +131,7 @@ def claim_wish(request, wish_id):
         wish.claimed = True
         wish.claimed_by = request.user
         wish.save()
+        messages.success(request, f"You claimed '{wish.title}'. You'll find it in 'My Claims'.")
         return redirect_with_recipient_param(request)
 
     raise Http404("Wish already claimed or you are the owner of this wish.")
@@ -147,6 +144,8 @@ def unclaim_wish(request, wish_id):
         wish.claimed = False
         wish.claimed_by = None
         wish.save()
+        messages.success(request, f"You unclaimed '{wish.title}'.")
+
         # Check if a next URL is provided in the query string (only the case if coming from my_claims)
         next_url = request.GET.get('next')
         if next_url:

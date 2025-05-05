@@ -1,0 +1,39 @@
+{% if wishes %}
+<div class="table-responsive">
+  <table class="table table-bordered table-striped align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>Title</th>
+        <th>Detail</th>
+        <th class="action-column">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for wish in wishes %}
+      <tr>
+        <td>
+          {% if wish.link %}
+            <a href="{{ wish.link }}" target="_blank" rel="noopener noreferrer">{{ wish.title }}</a>
+          {% else %}
+            {{ wish.title }}
+          {% endif %}
+        </td>
+        <td>{{ wish.detail }}</td>
+        <td class="action-column">
+          {% if not wish.claimed %}
+            <form action="{% url 'claim_wish' wish.id %}?recipient_id={{ selected_recipient_id }}" method="post" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-success">Claim</button>
+            </form>
+          {% elif wish.claimed_by != request.user %}
+            <span class="text-muted">Claimed</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="alert alert-info">{{ empty_message }}</div>
+{% endif %}

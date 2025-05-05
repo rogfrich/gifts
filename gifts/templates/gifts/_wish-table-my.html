@@ -1,0 +1,37 @@
+{% if wishes %}
+<div class="table-responsive">
+  <table class="table table-bordered table-striped align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>Title</th>
+        <th>Detail</th>
+        <th class="action-column">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for wish in wishes %}
+        <tr>
+          <td>
+            {% if wish.link %}
+              <a href="{{ wish.link }}" target="_blank" rel="noopener noreferrer">{{ wish.title }}</a>
+            {% else %}
+              {{ wish.title }}
+            {% endif %}
+          </td>
+          <td>{{ wish.detail }}</td>
+          
+          <td class="action-column">
+
+              <div class="d-flex flex-sm-row flex-column gap-1">
+                <a href="{% url 'edit_wish' wish.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                <a href="{% url 'delete_wish' wish.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+              </div>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  <div class="alert alert-info">{{ empty_message }}</div>
+{% endif %}

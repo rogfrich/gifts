@@ -6,7 +6,7 @@
 <a href = {% url 'create_wish' %} class="btn btn-primary mb-3">+ Create a new wish</a>
 
 
-{% include "gifts/_wish-table.html" with wishes=wishes empty_message="No wishes yet." show_claim_buttons=False allow_unclaim=False show_edit_controls=True %}
+{% include "gifts/_wish-table-my.html" with wishes=wishes empty_message="No wishes yet." show_claim_buttons=False allow_unclaim=False show_edit_controls=True %}
 
 
 
