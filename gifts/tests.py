@@ -188,12 +188,12 @@ class LinkFieldBehaviourWithURLTest(TestCase):
 
     def test_link_field_behaviour(self):
         """
-        Test if the link field behaves correctly.
+        Test if the link field behaves correctly. The title should be a link to the supplied URL.
         """
         response = self.client.get(reverse("my_wishes"))
         self.assertContains(
             response,
-            '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">Link</a>',
+            '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">Test Wish</a>',
         )
 
 
@@ -211,10 +211,11 @@ class LinkFieldBehaviourWithoutURL(TestCase):
 
     def test_link_field_behaviour(self):
         """
-        Test if the link field behaves correctly when no URL is provided.
+        Test if the link field behaves correctly when no URL is provided. The title should be rendered but not as a link.
         """
         response = self.client.get(reverse("my_wishes"))
-        self.assertContains(response, "N/A")  # Check if the link is not rendered
+        self.assertContains(response, "Test Wish") 
+        self.assertNotContains(response, '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">Test Wish</a>')
 
 
 class CreateWishViewTest(TestCase):
@@ -684,7 +685,7 @@ class MyClaimsTest(TestCase):
         response = self.client.get(reverse("my_claims"))
         self.assertContains(
             response,
-            '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">Link</a>',
+            '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">User2 SHOULD BE CLAIMED</a>',
         )
         self.client.logout()
 
