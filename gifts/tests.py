@@ -414,27 +414,23 @@ class OtherWishesTest(TestCase):
         response = self.client.get(
             reverse("other_wishes") + f"?recipient_id={self.no_wish_user_id}"
         )
-        self.assertContains(response, "No wishes available.")
+        self.assertContains(response, "No wishes found for this user.")
         self.assertNotContains(response, "<table>")
         self.client.logout()
 
     def test_other_wishes_link(self):
-        """
-        Test if the other_wishes view returns the correct link.
-        """
         self.client.login(username="testuser", password="testpassword")
-        response = self.client.get(reverse("other_wishes"))
+        url = reverse("other_wishes")
+        response = self.client.get(f"{url}?recipient_id={self.user2.id}")
         self.assertContains(
             response,
-            '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">Link</a>',
+            '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">OTHER-WISH</a>',
         )
 
     def test_other_wishes_context(self):
-        """
-        Test that only wishes from other users are shown in the context of other_wishes view.
-        """
         self.client.login(username="testuser", password="testpassword")
-        response = self.client.get(reverse("other_wishes"))
+        url = reverse("other_wishes")
+        response = self.client.get(f"{url}?recipient_id={self.user2.id}")
         for i in range(3):
             self.assertContains(response, f"ONLY IN OTHER WISHES {i}")
         self.assertNotContains(response, "MY-WISH")
@@ -497,26 +493,24 @@ class TemplateUsesCorrectURLTest(TestCase):
         )
 
     def test_template_uses_correct_url(self):
-        """
-        Test if the template uses the correct URL or placeholder text for the edit and delete function.
-        """
         wish = Wish.objects.all().first()
         self.client.login(username="testuser2", password="testpassword")
-        response = self.client.get(reverse("other_wishes"))
+
+        # Simulate viewing another user's wishes
+        url = reverse("other_wishes")
+        response = self.client.get(f"{url}?recipient_id={self.user.id}")
+        
         self.assertContains(
             response,
-            '<form action="/claim-wish/'
-            + f"{str(wish.id)}?recipient_id=None"
-            + '" method="post"',
+            f'<form action="/claim-wish/{wish.id}?recipient_id={self.user.id}" method="post"',
         )
-        self.client.post(reverse("claim_wish", args=[wish.id]))
-        response = self.client.get(reverse("other_wishes"))
-        self.assertContains(response, '<button type="submit"')
-        self.assertContains(response, ">Unclaim<")
-        self.client.logout()
-        self.client.login(username="testuser3", password="testpassword")
-        response = self.client.get(reverse("other_wishes"))
-        self.assertContains(response, "Claimed")
+
+        # Submit the claim
+        self.client.post(f"/claim-wish/{wish.id}?recipient_id={self.user.id}")
+
+        # Reload the page - wish should now be *gone*
+        response = self.client.get(f"{url}?recipient_id={self.user.id}")
+        self.assertNotContains(response, f'<a href="{wish.link}"', html=False)
 
 
 class OtherWishFilteringTest(TestCase):
@@ -534,17 +528,7 @@ class OtherWishFilteringTest(TestCase):
             )
             self.client.logout()
 
-    def test_other_wishes_filtering_default(self):
-        """
-        Test if the other_wishes view defaults to returning all other users' wishes.
-        """
-        # We should initially get all other users' wishes but not the logged in user's
-        self.client.login(username="testuser0", password="testpassword")
-        response = self.client.get(reverse("other_wishes"))
-        self.assertContains(response, "Wish for testuser1")
-        self.assertContains(response, "Wish for testuser2")
-        self.assertNotContains(response, "Wish for testuser0")
-
+     
     def test_other_wishes_filtering_by_recipient(self):
         """
         Test if the other_wishes view filters by recipient_id correctly.
