@@ -50,7 +50,7 @@ def other_wishes(request):
         recipient = None
 
     context = {
-        "recipients": User.objects.exclude(pk=request.user.pk),
+        "recipients": User.objects.exclude(pk=request.user.pk).order_by("username"),
         "selected_recipient": recipient,
         "wishes": wishes,
     }

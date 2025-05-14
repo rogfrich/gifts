@@ -435,6 +435,39 @@ class OtherWishesTest(TestCase):
             self.assertContains(response, f"ONLY IN OTHER WISHES {i}")
         self.assertNotContains(response, "MY-WISH")
 
+class OtherWishesDropDownIsAlphabeticTest(TestCase):
+    def setUp(self):
+        self.b_user = User.objects.create_user(
+            username = "b_user",
+            password="password",
+        )
+
+        self.c_user = User.objects.create_user(
+            username = "c_user",
+            password="password", 
+        )
+
+        self.a_user = User.objects.create_user(
+            username = "a_user",
+            password="password",
+        )
+
+        self.test_user = User.objects.create_user(
+            username="testuser",
+            password="password",
+        )
+
+    def test_other_wishes_dropdown_is_alphabetic(self):
+        self.client.login(username="testuser", password="password")
+        response = self.client.get(reverse("other_wishes"))
+        content = response.content.decode()
+
+        self.assertInHTML('<option value="%s">a_user</option>' % self.a_user.id, content)
+        self.assertInHTML('<option value="%s">b_user</option>' % self.b_user.id, content)
+        self.assertInHTML('<option value="%s">c_user</option>' % self.c_user.id, content)
+
+
+        
 
 class ClaimUnclaimWishTest(TestCase):
     def setUp(self):
