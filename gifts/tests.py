@@ -673,6 +673,65 @@ class MyClaimsTest(TestCase):
         )
         self.client.logout()
 
+class MyClaimsListIsAlphabeticTest(TestCase):
+    def setUp(self):
+        self.b_user = User.objects.create_user(
+            username="b_user",
+            password="password",
+        )
+
+        self.b_wish = Wish.objects.create(
+            title = "b_user_wish",
+            detail = "b_user_wish",
+            user = self.b_user,
+        )
+
+        self.c_user = User.objects.create_user(
+            username="c_user",
+            password="password",
+        )
+
+        self.c_wish = Wish.objects.create(
+            title = "c_user_wish",
+            detail = "c_user_wish",
+            user = self.c_user
+        )
+
+        self.a_user = User.objects.create_user(
+            username="a_user",
+            password = "password",
+        )
+
+        self.a_wish = Wish.objects.create(
+            title = "a_user_wish",
+            detail = "a_user_wish",
+            user = self.a_user,
+        )
+
+        self.claiming_user = User.objects.create_user(
+            username="claiming_user",
+            password="password"
+        )
+
+    def test_my_claims_list_of_users_is_alphabetic(self):
+        self.client.login(username="claiming_user", password="password")
+        for wish in [self.b_wish, self.c_wish, self.a_wish]:
+            url = reverse('claim_wish', args=[wish.id])
+            self.client.post(url)
+
+        response = self.client.get(reverse("my_claims"))
+        claims_by_user = response.context['claims_by_user']
+        recipients = [user.username for user in claims_by_user.keys()]
+
+        alphabetic = [
+            "a_user",
+            "b_user",
+            "c_user"
+        ]
+        self.assertEqual(recipients, alphabetic)
+
+
+
 
 class CustomContextProcessorTest(TestCase):
     def setUp(self):
