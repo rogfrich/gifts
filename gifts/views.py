@@ -63,7 +63,7 @@ def my_claims(request):
     """
     claims_by_user = {}
     all_claims = Wish.objects.filter(claimed=True, claimed_by=request.user)
-    for user in User.objects.exclude(id=request.user.id):
+    for user in User.objects.exclude(id=request.user.id).order_by("username"):
         claims_for_this_user = all_claims.filter(user=user)
         if claims_for_this_user.exists():
             claims_by_user[user] = claims_for_this_user
