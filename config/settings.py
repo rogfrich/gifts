@@ -52,7 +52,7 @@ if ENVIRONMENT == "dev":
     ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.68.102"]
 elif ENVIRONMENT == "qa":
     DEBUG = False
-    ALLOWED_HOSTS = ["giftsqa.richcairns.com"]  # TODO: confirm actual QA domain
+    ALLOWED_HOSTS = ["giftsqa.pythonanywhere.com/"]
 else:  # prod
     DEBUG = False
     ALLOWED_HOSTS = ["gifts.richcairns.com"]
