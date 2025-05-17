@@ -1,16 +1,17 @@
-import os
 import csv
-import tempfile
+import os
 import shutil
-from django.test import TestCase
+import tempfile
+
 from django.conf import settings
-from dotenv import load_dotenv
-from utils import exporter
-from gifts.models import Wish
 from django.contrib.auth.models import User
+from django.test import TestCase
+from dotenv import load_dotenv
+
+from gifts.models import Wish
+from utils import exporter
 
 load_dotenv()
-
 
 
 class TestExporterWritesFiles(TestCase):
@@ -66,7 +67,7 @@ class TestExporterWritesFiles(TestCase):
         self.assertTrue(os.path.exists(self.wishes_file), "wishes.csv was not created.")
 
     def test_users_csv_contents(self):
-        with open(self.users_file, newline='') as csvfile:
+        with open(self.users_file, newline="") as csvfile:
             reader = list(csv.DictReader(csvfile))
             self.assertEqual(len(reader), 3)
             usernames = [row["username"] for row in reader]
@@ -75,11 +76,11 @@ class TestExporterWritesFiles(TestCase):
             self.assertIn("testuser3", usernames)
 
     def test_wishes_csv_contents(self):
-        with open(self.wishes_file, newline='') as csvfile:
+        with open(self.wishes_file, newline="") as csvfile:
             reader = list(csv.DictReader(csvfile))
             self.assertEqual(len(reader), 3)
 
-            wishes_by_title = {row['title']: row for row in reader}
+            wishes_by_title = {row["title"]: row for row in reader}
 
             wish1 = wishes_by_title.get("Wish 1")
             self.assertIsNotNone(wish1)

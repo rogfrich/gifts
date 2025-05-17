@@ -8,13 +8,12 @@ If the --truncate flag is set, all tables will be truncated before importing dat
 
 """
 
-import sys
-import os
-from pathlib import Path
 import argparse
 import csv
+import os
 import secrets
-
+import sys
+from pathlib import Path
 
 import django
 
@@ -27,8 +26,9 @@ sys.path.append(str(BASE_DIR))
 
 django.setup()
 
-from gifts.models import Wish
 from django.contrib.auth.models import User
+
+from gifts.models import Wish
 
 
 def truncate_tables(verbose=False):
@@ -48,7 +48,7 @@ def import_users(source_folder, verbose):
     import_user_file = os.path.join(source_folder, "users.csv")
     if verbose:
         print(f"Importing users from {import_user_file}")
-    
+
     with open(import_user_file, newline="") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -62,7 +62,7 @@ def import_users(source_folder, verbose):
                 print(f"Generated password for {row['username']}: {random_password}")
             user.set_password(random_password)
             user.save()
-    
+
     if verbose:
         print(f"Imported {User.objects.count()} users.")
 
@@ -112,6 +112,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.truncate:
         truncate_tables(verbose=True)
-    
+
     source_folder = args.source_folder
     import_all(source_folder, verbose=True)

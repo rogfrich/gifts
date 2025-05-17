@@ -5,8 +5,8 @@ this can also be used to transfer data between different instances of the applic
 
 import argparse
 import csv
-import sys
 import os
+import sys
 from pathlib import Path
 
 import django
@@ -21,12 +21,8 @@ sys.path.append(str(BASE_DIR))
 django.setup()
 
 from django.contrib.auth.models import User
+
 from gifts.models import Wish
-
-
-
-
-
 
 
 def export_users(export_path, verbose):
@@ -40,9 +36,7 @@ def export_users(export_path, verbose):
 
         writer.writeheader()
         for user in users:
-            writer.writerow(
-                {"id": user.id, "username": user.username, "email": user.email}
-            )
+            writer.writerow({"id": user.id, "username": user.username, "email": user.email})
     if verbose:
         print(f"Exported {users.count()} users to {os.path.join(export_path, 'users.csv')}")
 
@@ -64,9 +58,7 @@ def export_wishes(export_path, verbose):
             "claimed_by",
             "updated_at",
         ]
-        writer = csv.DictWriter(
-            csvfile, fieldnames=fieldnames, quoting=csv.QUOTE_NONNUMERIC
-        )
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, quoting=csv.QUOTE_NONNUMERIC)
 
         writer.writeheader()
         for wish in wishes:
@@ -84,9 +76,7 @@ def export_wishes(export_path, verbose):
                 }
             )
     if verbose:
-        print(
-            f"Exported {wishes.count()} wishes to {os.path.join(export_path, 'wishes.csv')}"
-        )
+        print(f"Exported {wishes.count()} wishes to {os.path.join(export_path, 'wishes.csv')}")
 
 
 def export_all(export_path, verbose=False):
