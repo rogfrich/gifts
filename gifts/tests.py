@@ -1,15 +1,16 @@
-from unittest.mock import patch
-from django.test import TestCase
-from django.contrib.auth.models import User
-from django.urls import reverse, resolve
-from django.core import mail
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
-from .models import Wish  # Updated import to Wish
 import os
+from unittest.mock import patch
 
-from .views import my_wishes, other_wishes, my_claims
+from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
+from django.core import mail
+from django.test import TestCase
+from django.urls import resolve, reverse
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
+
+from .models import Wish  # Updated import to Wish
+from .views import my_claims, my_wishes, other_wishes
 
 
 class WishModelTest(TestCase):  # Updated class name
@@ -35,9 +36,7 @@ class WishModelTest(TestCase):  # Updated class name
 
 class UrlViewTemplateTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username="testuser", password="testpassword"
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpassword")
         self.client.login(username="testuser", password="testpassword")
 
     def test_url_view_template_wiring(self):
@@ -68,9 +67,7 @@ class UrlViewTemplateTest(TestCase):
 
 class AuthenticationTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username="testuser", password="testpassword"
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpassword")
 
     def test_login(self):
         """
@@ -119,9 +116,7 @@ class AuthenticationTest(TestCase):
 
 class MyWishesViewTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username="testuser1", password="testpassword"
-        )
+        self.user = User.objects.create_user(username="testuser1", password="testpassword")
         self.client.login(username="testuser1", password="testpassword")
         for i in range(3):
             Wish.objects.create(
@@ -133,9 +128,7 @@ class MyWishesViewTest(TestCase):
 
         self.client.logout()
 
-        self.user2 = User.objects.create_user(
-            username="testuser2", password="testpassword"
-        )
+        self.user2 = User.objects.create_user(username="testuser2", password="testpassword")
         self.client.login(username="testuser2", password="testpassword")
         for i in range(3):
             Wish.objects.create(
@@ -175,9 +168,7 @@ class MyWishesViewTest(TestCase):
 
 class LinkFieldBehaviourWithURLTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username="testuser", password="testpassword"
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpassword")
         self.client.login(username="testuser", password="testpassword")
         self.wish_with_link = Wish.objects.create(
             user=self.user,
@@ -199,9 +190,7 @@ class LinkFieldBehaviourWithURLTest(TestCase):
 
 class LinkFieldBehaviourWithoutURL(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username="testuser", password="testpassword"
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpassword")
         self.client.login(username="testuser", password="testpassword")
         self.wish_without_link = Wish.objects.create(
             user=self.user,
@@ -214,15 +203,16 @@ class LinkFieldBehaviourWithoutURL(TestCase):
         Test if the link field behaves correctly when no URL is provided. The title should be rendered but not as a link.
         """
         response = self.client.get(reverse("my_wishes"))
-        self.assertContains(response, "Test Wish") 
-        self.assertNotContains(response, '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">Test Wish</a>')
+        self.assertContains(response, "Test Wish")
+        self.assertNotContains(
+            response,
+            '<a href="https://www.example.com" target="_blank" rel="noopener noreferrer">Test Wish</a>',
+        )
 
 
 class CreateWishViewTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username="testuser", password="testpassword"
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpassword")
         self.client.login(username="testuser", password="testpassword")
 
     def test_create_wish_get(self):
@@ -251,9 +241,7 @@ class CreateWishViewTest(TestCase):
 
 class EditViewTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username="testuser", password="testpassword"
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpassword")
         self.client.login(username="testuser", password="testpassword")
         self.wish = Wish.objects.create(
             user=self.user,
@@ -309,9 +297,7 @@ class EditViewTest(TestCase):
 
 class DeleteWishTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username="testuser", password="testpassword"
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpassword")
         self.client.login(username="testuser", password="testpassword")
         self.wish = Wish.objects.create(
             user=self.user,
@@ -372,9 +358,7 @@ class DeleteWishTest(TestCase):
 
 class OtherWishesTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username="testuser", password="testpassword"
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpassword")
         self.client.login(username="testuser", password="testpassword")
         for i in range(3):
             Wish.objects.create(
@@ -386,9 +370,7 @@ class OtherWishesTest(TestCase):
 
         self.client.logout()
 
-        self.user2 = User.objects.create_user(
-            username="testuser2", password="testpassword"
-        )
+        self.user2 = User.objects.create_user(username="testuser2", password="testpassword")
         self.client.login(username="testuser2", password="testpassword")
         for i in range(3):
             Wish.objects.create(
@@ -400,9 +382,7 @@ class OtherWishesTest(TestCase):
         self.client.logout()
 
         # Create a user with no wishes
-        self.user3 = User.objects.create_user(
-            username="testuser3", password="testpassword"
-        )
+        self.user3 = User.objects.create_user(username="testuser3", password="testpassword")
         self.no_wish_user_id = self.user3.id
 
     def test_other_wishes_no_wishes(self):
@@ -435,20 +415,21 @@ class OtherWishesTest(TestCase):
             self.assertContains(response, f"ONLY IN OTHER WISHES {i}")
         self.assertNotContains(response, "MY-WISH")
 
+
 class OtherWishesDropDownIsAlphabeticTest(TestCase):
     def setUp(self):
         self.b_user = User.objects.create_user(
-            username = "b_user",
+            username="b_user",
             password="password",
         )
 
         self.c_user = User.objects.create_user(
-            username = "c_user",
-            password="password", 
+            username="c_user",
+            password="password",
         )
 
         self.a_user = User.objects.create_user(
-            username = "a_user",
+            username="a_user",
             password="password",
         )
 
@@ -467,16 +448,10 @@ class OtherWishesDropDownIsAlphabeticTest(TestCase):
         self.assertInHTML('<option value="%s">c_user</option>' % self.c_user.id, content)
 
 
-        
-
 class ClaimUnclaimWishTest(TestCase):
     def setUp(self):
-        self.user1 = User.objects.create_user(
-            username="testuser", password="testpassword"
-        )
-        self.user2 = User.objects.create_user(
-            username="otheruser", password="otherpassword"
-        )
+        self.user1 = User.objects.create_user(username="testuser", password="testpassword")
+        self.user2 = User.objects.create_user(username="otheruser", password="otherpassword")
 
         self.wish = Wish.objects.create(
             user=self.user2,
@@ -504,9 +479,7 @@ class ClaimUnclaimWishTest(TestCase):
 
 class TemplateUsesCorrectURLTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            username="testuser", password="testpassword"
-        )
+        self.user = User.objects.create_user(username="testuser", password="testpassword")
         self.client.login(username="testuser", password="testpassword")
         Wish.objects.create(
             user=self.user,
@@ -517,13 +490,9 @@ class TemplateUsesCorrectURLTest(TestCase):
 
         self.client.logout()
 
-        self.user2 = User.objects.create_user(
-            username="testuser2", password="testpassword"
-        )
+        self.user2 = User.objects.create_user(username="testuser2", password="testpassword")
 
-        self.user3 = User.objects.create_user(
-            username="testuser3", password="testpassword"
-        )
+        self.user3 = User.objects.create_user(username="testuser3", password="testpassword")
 
     def test_template_uses_correct_url(self):
         wish = Wish.objects.all().first()
@@ -532,7 +501,7 @@ class TemplateUsesCorrectURLTest(TestCase):
         # Simulate viewing another user's wishes
         url = reverse("other_wishes")
         response = self.client.get(f"{url}?recipient_id={self.user.id}")
-        
+
         self.assertContains(
             response,
             f'<form action="/claim-wish/{wish.id}?recipient_id={self.user.id}" method="post"',
@@ -549,9 +518,7 @@ class TemplateUsesCorrectURLTest(TestCase):
 class OtherWishFilteringTest(TestCase):
     def setUp(self):
         for i in range(3):
-            user = User.objects.create_user(
-                username=f"testuser{i}", password="testpassword"
-            )
+            user = User.objects.create_user(username=f"testuser{i}", password="testpassword")
             self.client.login(username=f"testuser{i}", password="testpassword")
             Wish.objects.create(
                 user=user,
@@ -561,7 +528,6 @@ class OtherWishFilteringTest(TestCase):
             )
             self.client.logout()
 
-     
     def test_other_wishes_filtering_by_recipient(self):
         """
         Test if the other_wishes view filters by recipient_id correctly.
@@ -585,12 +551,8 @@ class InvalidClaimTest(TestCase):
     def setUp(self):
         # Create three users: one wish owner, one valid claimer, one intruder
         self.owner = User.objects.create_user(username="owner", password="testpassword")
-        self.claimer = User.objects.create_user(
-            username="claimer", password="testpassword"
-        )
-        self.intruder = User.objects.create_user(
-            username="intruder", password="testpassword"
-        )
+        self.claimer = User.objects.create_user(username="claimer", password="testpassword")
+        self.intruder = User.objects.create_user(username="intruder", password="testpassword")
 
         # Owner's wish (initially unclaimed)
         self.own_wish = Wish.objects.create(
@@ -641,13 +603,9 @@ class MyClaimsTest(TestCase):
             username="claiming_user", password="testpassword"
         )
 
-        self.user2 = User.objects.create_user(
-            username="testuser2", password="testpassword"
-        )
+        self.user2 = User.objects.create_user(username="testuser2", password="testpassword")
 
-        self.user3 = User.objects.create_user(
-            username="testuser3", password="testpassword"
-        )
+        self.user3 = User.objects.create_user(username="testuser3", password="testpassword")
         self.client.login(username="testuser2", password="testpassword")
         self.user2_wish_to_claim = Wish.objects.create(
             user=self.user2,
@@ -706,6 +664,7 @@ class MyClaimsTest(TestCase):
         )
         self.client.logout()
 
+
 class MyClaimsListIsAlphabeticTest(TestCase):
     def setUp(self):
         self.b_user = User.objects.create_user(
@@ -714,9 +673,9 @@ class MyClaimsListIsAlphabeticTest(TestCase):
         )
 
         self.b_wish = Wish.objects.create(
-            title = "b_user_wish",
-            detail = "b_user_wish",
-            user = self.b_user,
+            title="b_user_wish",
+            detail="b_user_wish",
+            user=self.b_user,
         )
 
         self.c_user = User.objects.create_user(
@@ -725,45 +684,34 @@ class MyClaimsListIsAlphabeticTest(TestCase):
         )
 
         self.c_wish = Wish.objects.create(
-            title = "c_user_wish",
-            detail = "c_user_wish",
-            user = self.c_user
+            title="c_user_wish", detail="c_user_wish", user=self.c_user
         )
 
         self.a_user = User.objects.create_user(
             username="a_user",
-            password = "password",
+            password="password",
         )
 
         self.a_wish = Wish.objects.create(
-            title = "a_user_wish",
-            detail = "a_user_wish",
-            user = self.a_user,
+            title="a_user_wish",
+            detail="a_user_wish",
+            user=self.a_user,
         )
 
-        self.claiming_user = User.objects.create_user(
-            username="claiming_user",
-            password="password"
-        )
+        self.claiming_user = User.objects.create_user(username="claiming_user", password="password")
 
     def test_my_claims_list_of_users_is_alphabetic(self):
         self.client.login(username="claiming_user", password="password")
         for wish in [self.b_wish, self.c_wish, self.a_wish]:
-            url = reverse('claim_wish', args=[wish.id])
+            url = reverse("claim_wish", args=[wish.id])
             self.client.post(url)
 
         response = self.client.get(reverse("my_claims"))
-        claims_by_user = response.context['claims_by_user']
+        claims_by_user = response.context["claims_by_user"]
         recipients = [user.username for user in claims_by_user.keys()]
 
-        alphabetic = [
-            "a_user",
-            "b_user",
-            "c_user"
-        ]
+        alphabetic = ["a_user", "b_user", "c_user"]
         self.assertEqual(recipients, alphabetic)
-
-
 
 
 class CustomContextProcessorTest(TestCase):
@@ -781,9 +729,7 @@ class CustomContextProcessorTest(TestCase):
         self.client.login(username="user1", password="password")
         return self.client.get(reverse("my_wishes"))
 
-    @patch.dict(
-        os.environ, {"ENVIRONMENT": "dev", "DATABASE_NAME": "context-test.sqlite3"}
-    )
+    @patch.dict(os.environ, {"ENVIRONMENT": "dev", "DATABASE_NAME": "context-test.sqlite3"})
     def test_dev_environment_context(self):
         """
         When running in dev, all of the custom context should be rendered.
@@ -793,9 +739,7 @@ class CustomContextProcessorTest(TestCase):
         self.assertContains(response, 'Environment: "dev"')
         self.assertContains(response, "Database: context-test.sqlite3")
 
-    @patch.dict(
-        os.environ, {"ENVIRONMENT": "qa", "DATABASE_NAME": "context-test.sqlite3"}
-    )
+    @patch.dict(os.environ, {"ENVIRONMENT": "qa", "DATABASE_NAME": "context-test.sqlite3"})
     def test_qa_environment_context(self):
         """
         When running in qa, the environemnt should be rendered, but not the DB name.
@@ -807,9 +751,7 @@ class CustomContextProcessorTest(TestCase):
         self.assertNotContains(response, "Database:")
         self.assertNotContains(response, "context-test.sqlite3")
 
-    @patch.dict(
-        os.environ, {"ENVIRONMENT": "prod", "DATABASE_NAME": "context-test.sqlite3"}
-    )
+    @patch.dict(os.environ, {"ENVIRONMENT": "prod", "DATABASE_NAME": "context-test.sqlite3"})
     def test_prod_environment_context(self):
         """
         When running in prod, we should not see either the environment or the DB name.
@@ -837,12 +779,11 @@ class CustomContextProcessorTest(TestCase):
         response = self.login_and_get()
         self.assertContains(response, "Environment: cannot determine")
 
+
 class TestPasswordResetFlow(TestCase):
     def setUp(self):
         self.user1 = User.objects.create_user(
-            username = "user1",
-            password = "password",
-            email = "user1@example.com"
+            username="user1", password="password", email="user1@example.com"
         )
 
     def test_reset_request_page(self):
@@ -851,17 +792,18 @@ class TestPasswordResetFlow(TestCase):
         self.assertTemplateUsed(response, "registration/password_reset_form.html")
         self.assertContains(response, ">Email address<")
 
-    
     def test_submitting_email_triggers_correct_behaviour(self):
-        response = self.client.post(reverse('password_reset'), data={'email': 'user1@example.com'}, follow=True)
-        self.assertTemplateUsed(response, 'registration/password_reset_done.html')
+        response = self.client.post(
+            reverse("password_reset"), data={"email": "user1@example.com"}, follow=True
+        )
+        self.assertTemplateUsed(response, "registration/password_reset_done.html")
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
-        self.assertIn('user1@example.com', email.to)
-        self.assertIn('Password reset', email.subject)
-        self.assertIn("You're receiving this email because you requested a password reset", email.body)
-
-
+        self.assertIn("user1@example.com", email.to)
+        self.assertIn("Password reset", email.subject)
+        self.assertIn(
+            "You're receiving this email because you requested a password reset", email.body
+        )
 
     def test_password_reset_done_page(self):
         response = self.client.get(reverse("password_reset_done"))
@@ -869,32 +811,35 @@ class TestPasswordResetFlow(TestCase):
         self.assertTemplateUsed(response, "registration/password_reset_done.html")
         self.assertContains(response, "Check your inbox")
 
-
     def test_reset_token(self):
         user = self.user1
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
 
-        reset_url = reverse('password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
+        reset_url = reverse("password_reset_confirm", kwargs={"uidb64": uidb64, "token": token})
 
         # 1. GET the password reset confirm page (follow redirects)
         response = self.client.get(reset_url, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'registration/password_reset_confirm.html')
+        self.assertTemplateUsed(response, "registration/password_reset_confirm.html")
 
         # 2. Find the final URL where form should POST
         final_reset_url = response.request["PATH_INFO"]
 
         # 3. POST the new password form to the *final* URL
         new_password = "MyNewSecurePassword123!"
-        response = self.client.post(final_reset_url, {
-            'new_password1': new_password,
-            'new_password2': new_password,
-        }, follow=True)
+        response = self.client.post(
+            final_reset_url,
+            {
+                "new_password1": new_password,
+                "new_password2": new_password,
+            },
+            follow=True,
+        )
 
         # 4. Assert password reset complete page shown
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'registration/password_reset_complete.html')
+        self.assertTemplateUsed(response, "registration/password_reset_complete.html")
 
         # 5. Check login works with new password
         login_success = self.client.login(username=user.username, password=new_password)

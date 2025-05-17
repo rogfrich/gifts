@@ -8,10 +8,10 @@ def custom_context_processor(request):
 
     if environment_value_from_dotenv:
         environment_value_from_dotenv = environment_value_from_dotenv.strip('"').strip("'")
-        
+
     if environment_value_from_dotenv not in ACCEPTABLE_ENVIRONMENT_VALUES:
         environment = "unknown"  # covers invalid values, and also None if env var is not set
-        
+
     else:
         environment = environment_value_from_dotenv
 

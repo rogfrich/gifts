@@ -1,7 +1,9 @@
-import tempfile
 import shutil
-from django.test import TestCase
+import tempfile
+
 from django.contrib.auth import get_user_model
+from django.test import TestCase
+
 from gifts.models import Wish
 from utils.exporter import export_all
 from utils.importer import import_all, truncate_tables
@@ -100,5 +102,3 @@ class TestImporter(TestCase):
             import_all(source_folder=self.temp_dir)
         except Exception as e:
             self.fail(f"Import raised an unexpected exception: {e}")
-
-

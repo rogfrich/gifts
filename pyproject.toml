@@ -8,4 +8,21 @@ dependencies = [
     "django>=5.1.7",
     "django-widget-tweaks>=1.5.0",
     "python-dotenv>=1.1.0",
+    "ruff>=0.11.10",
 ]
+[tool.ruff]
+line-length = 100
+lint.extend-select = [
+  "I",     # isort - import sorting
+  "E",     # pycodestyle
+  "F",     # pyflakes
+  "B",     # flake8-bugbear
+  "DJ",    # flake8-django
+]
+exclude = ["migrations"]
+target-version = "py311"
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
+docstring-code-line-length = 88
