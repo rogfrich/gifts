@@ -46,16 +46,6 @@ if ENVIRONMENT == "dev":
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = require_env("DJANGO_SECRET_KEY")
 
-# Environment-specific settings
-# if ENVIRONMENT == "dev":
-#     DEBUG = True
-#     ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.68.102"]
-# elif ENVIRONMENT == "qa":
-#     DEBUG = False
-#     ALLOWED_HOSTS = ["giftsqa.richcairns.com"]  # TODO: confirm actual QA domain
-# else:  # prod
-#     DEBUG = False
-#     ALLOWED_HOSTS = ["gifts.richcairns.com"]
 
 # Environment-specific settings
 
