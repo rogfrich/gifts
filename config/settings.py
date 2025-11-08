@@ -47,15 +47,39 @@ if ENVIRONMENT == "dev":
 SECRET_KEY = require_env("DJANGO_SECRET_KEY")
 
 # Environment-specific settings
-if ENVIRONMENT == "dev":
-    DEBUG = True
-    ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.68.102"]
-elif ENVIRONMENT == "qa":
-    DEBUG = False
-    ALLOWED_HOSTS = ["giftsqa.richcairns.com"]  # TODO: confirm actual QA domain
-else:  # prod
-    DEBUG = False
-    ALLOWED_HOSTS = ["gifts.richcairns.com"]
+# if ENVIRONMENT == "dev":
+#     DEBUG = True
+#     ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.68.102"]
+# elif ENVIRONMENT == "qa":
+#     DEBUG = False
+#     ALLOWED_HOSTS = ["giftsqa.richcairns.com"]  # TODO: confirm actual QA domain
+# else:  # prod
+#     DEBUG = False
+#     ALLOWED_HOSTS = ["gifts.richcairns.com"]
+
+# Environment-specific settings
+
+# DEBUG:
+# - If DJANGO_DEBUG is set, trust that.
+# - Otherwise: DEBUG=True only in dev, False in qa/prod.
+_debug_env = os.getenv("DJANGO_DEBUG")
+if _debug_env is not None:
+    DEBUG = _debug_env.lower() == "true"
+else:
+    DEBUG = ENVIRONMENT == "dev"
+
+# ALLOWED_HOSTS:
+# - Prefer DJANGO_ALLOWED_HOSTS from .env (comma-separated).
+# - In dev, default to localhost if not set.
+# - In qa/prod, require explicit configuration.
+_allowed = os.getenv("DJANGO_ALLOWED_HOSTS", "")
+
+if _allowed:
+    ALLOWED_HOSTS = [h.strip() for h in _allowed.split(",") if h.strip()]
+elif ENVIRONMENT == "dev":
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+else:
+    ALLOWED_HOSTS = []
 
 if ENVIRONMENT in ["qa", "prod"]:
     SECURE_SSL_REDIRECT = True
@@ -158,9 +182,22 @@ USE_I18N = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = "static/"
-if ENVIRONMENT in ["qa", "prod"]:
+
+STATIC_URL = "/static/"
+
+static_root_env = os.getenv("STATIC_ROOT")
+if static_root_env:
+    STATIC_ROOT = Path(static_root_env)
+elif ENVIRONMENT in ["qa", "prod"]:
     STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_URL = "/media/"
+
+media_root_env = os.getenv("MEDIA_ROOT")
+if media_root_env:
+    MEDIA_ROOT = Path(media_root_env)
+else:
+    MEDIA_ROOT = BASE_DIR / "mediafiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
