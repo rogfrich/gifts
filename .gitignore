@@ -181,3 +181,9 @@ local.txt
 
 # Apple stuff
 .DS_Store
+
+# In production static files are served by Caddy from a location outside the git repo. 
+# As such, if we ever end up with a local staticfiles folder inside the repo (maybe as a 
+# result of running collectstatic) it should be ignored to avoid introducing unneeded files
+# into prod with the next git pull. 
+staticfiles/
