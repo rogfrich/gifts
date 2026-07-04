@@ -854,10 +854,12 @@ class LoggingTests(TestCase):
         self.user1 = User.objects.create_user(
             username="user1",
             password="testpassword",
+            email="user1@example.com"
         )
         self.user2 = User.objects.create_user(
             username="user2",
             password="testpassword",
+            email="user2@example.com"
         )
 
     def test_create_wish_logs_event(self):
@@ -964,25 +966,59 @@ class LoggingTests(TestCase):
         self.assertIn(f"unclaimed_by_id={self.user2.id}", message)
 
 
-def test_delete_wish_logs_event(self):
-    self.client.login(username="user1", password="testpassword")
+    def test_delete_wish_logs_event(self):
+        self.client.login(username="user1", password="testpassword")
 
-    wish = Wish.objects.create(
-        user=self.user1,
-        title="Delete me",
-    )
-
-    with self.assertLogs("gifts.views", level="INFO") as logs:
-        response = self.client.post(
-            reverse("delete_wish", args=[wish.id]),
+        wish = Wish.objects.create(
+            user=self.user1,
+            title="Delete me",
         )
 
-    self.assertRedirects(response, reverse("my_wishes"))
+        with self.assertLogs("gifts.views", level="INFO") as logs:
+            response = self.client.post(
+                reverse("delete_wish", args=[wish.id]),
+            )
 
-    self.assertEqual(len(logs.records), 1)
+        self.assertRedirects(response, reverse("my_wishes"))
 
-    message = logs.records[0].getMessage()
+        self.assertEqual(len(logs.records), 1)
 
-    self.assertIn("wish.deleted", message)
-    self.assertIn(f"wish_id={wish.id}", message)
-    self.assertIn(f"user_id={self.user1.id}", message)
+        message = logs.records[0].getMessage()
+
+        self.assertIn("wish.deleted", message)
+        self.assertIn(f"wish_id={wish.id}", message)
+        self.assertIn(f"user_id={self.user1.id}", message)
+
+
+    def test_password_reset_logs_for_known_email(self):
+        with self.assertLogs("gifts.forms", level="INFO") as logs:
+            response = self.client.post(
+                reverse("password_reset"),
+                {"email": self.user1.email},
+        )
+
+        self.assertRedirects(response, reverse("password_reset_done"))
+
+        messages = [record.getMessage() for record in logs.records]
+
+        self.assertTrue(any("password_reset.request_received" in msg for msg in messages))
+        self.assertTrue(any("password_reset.request_processed" in msg for msg in messages))
+        self.assertTrue(any(f"email={self.user1.email}" in msg for msg in messages))
+
+
+    def test_password_reset_logs_for_unknown_email(self):
+        email = "nobody@example.com"
+
+        with self.assertLogs("gifts.forms", level="INFO") as logs:
+            response = self.client.post(
+                reverse("password_reset"),
+                {"email": email},
+            )
+
+        self.assertRedirects(response, reverse("password_reset_done"))
+
+        messages = [record.getMessage() for record in logs.records]
+
+        self.assertTrue(any("password_reset.request_received" in msg for msg in messages))
+        self.assertTrue(any("password_reset.request_processed" in msg for msg in messages))
+        self.assertTrue(any(f"email={email}" in msg for msg in messages))

@@ -1,6 +1,7 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
+from .forms import LoggingPasswordResetForm
 from .views import (
     claim_wish,
     create_wish,
@@ -23,7 +24,10 @@ urlpatterns = [
     path("delete-wish/<int:wish_id>/", delete_wish, name="delete_wish"),
     path("claim-wish/<int:wish_id>", claim_wish, name="claim_wish"),
     path("unclaim-wish/<int:wish_id>", unclaim_wish, name="unclaim_wish"),
-    path("password-reset/", auth_views.PasswordResetView.as_view(), name="password_reset"),
+    path("password-reset/", 
+         auth_views.PasswordResetView.as_view(
+            form_class=LoggingPasswordResetForm), 
+            name="password_reset"),
     path(
         "password-reset/done/",
         auth_views.PasswordResetDoneView.as_view(),
