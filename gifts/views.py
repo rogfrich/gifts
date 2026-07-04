@@ -126,10 +126,11 @@ def edit_wish(request, wish_id):
 def delete_wish(request, wish_id):
     wish = get_object_or_404(Wish, id=wish_id, user=request.user)
     if request.method == "POST":
+        wish_id_to_log = wish.id
         wish.delete()
         logger.info(
             "wish.deleted wish_id=%s user_id=%s",
-            wish.id,
+            wish_id_to_log,
             request.user.id,
         )
         return redirect("my_wishes")
