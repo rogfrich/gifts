@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -211,3 +212,40 @@ else:
     EMAIL_HOST_USER = require_env("EMAIL_HOST_USER")
     EMAIL_HOST_PASSWORD = require_env("EMAIL_HOST_PASSWORD")
     DEFAULT_FROM_EMAIL = require_env("DEFAULT_FROM_EMAIL")
+
+
+# Logging
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    "formatters": {
+        "standard": {
+            "format": (
+                "%(asctime)s %(levelname)s %(name)s "
+                "%(message)s"
+            ),
+        },
+    },
+
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "stream": sys.stdout,
+            "formatter": "standard",
+        },
+    },
+
+    "loggers": {
+        "gifts": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": True,
+        },
+    },
+}

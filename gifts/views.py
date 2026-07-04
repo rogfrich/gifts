@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import urlencode
 
 from django.contrib import messages
@@ -11,6 +12,8 @@ from django.views.decorators.http import require_POST
 
 from .forms import DeleteWishConfirmationForm, WishForm
 from .models import Wish
+
+logger = logging.getLogger(__name__)
 
 
 class CustomLoginView(LoginView):
@@ -82,6 +85,11 @@ def create_wish(request):
             wish = form.save(commit=False)
             wish.user = request.user
             wish.save()
+            logger.info(
+                "wish.created wish_id=%s user_id=%s",
+                wish.id,
+                request.user.id,
+            )
             return redirect("my_wishes")
     else:
         form = WishForm()
@@ -98,6 +106,11 @@ def edit_wish(request, wish_id):
         form = WishForm(request.POST, instance=wish)
         if form.is_valid():
             form.save()
+            logger.info(
+                "wish.updated wish_id=%s user_id=%s",
+                wish.id,
+                request.user.id,
+            )
             return redirect("my_wishes")
     else:
         form = WishForm(instance=wish)
@@ -114,6 +127,11 @@ def delete_wish(request, wish_id):
     wish = get_object_or_404(Wish, id=wish_id, user=request.user)
     if request.method == "POST":
         wish.delete()
+        logger.info(
+            "wish.deleted wish_id=%s user_id=%s",
+            wish.id,
+            request.user.id,
+        )
         return redirect("my_wishes")
 
     context = {
@@ -131,6 +149,12 @@ def claim_wish(request, wish_id):
         wish.claimed = True
         wish.claimed_by = request.user
         wish.save()
+        logger.info(
+            "wish.claimed wish_id=%s wish_owner_id=%s claimed_by_id=%s",
+            wish.id,
+            wish.user.id,
+            request.user.id,
+        )
         messages.success(request, f"You claimed '{wish.title}'. You'll find it in 'My Claims'.")
         return redirect_with_recipient_param(request)
 
@@ -145,9 +169,16 @@ def unclaim_wish(request, wish_id):
         wish.claimed = False
         wish.claimed_by = None
         wish.save()
+        logger.info(
+            "wish.unclaimed wish_id=%s wish_owner_id=%s unclaimed_by_id=%s",
+            wish.id,
+            wish.user.id,
+            request.user.id,
+        )
         messages.success(request, f"You unclaimed '{wish.title}'.")
 
-        # Check if a next URL is provided in the query string (only the case if coming from my_claims)
+        # Check if a next URL is provided in the query string 
+        # (only the case if coming from my_claims)
         next_url = request.GET.get("next")
         if next_url:
             return redirect(next_url)
