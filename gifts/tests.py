@@ -844,3 +844,181 @@ class TestPasswordResetFlow(TestCase):
         # 5. Check login works with new password
         login_success = self.client.login(username=user.username, password=new_password)
         self.assertTrue(login_success)
+
+###############################################################################
+# Logging tests
+###############################################################################
+
+class LoggingTests(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(
+            username="user1",
+            password="testpassword",
+            email="user1@example.com"
+        )
+        self.user2 = User.objects.create_user(
+            username="user2",
+            password="testpassword",
+            email="user2@example.com"
+        )
+
+    def test_create_wish_logs_event(self):
+        self.client.login(username="user1", password="testpassword")
+
+        with self.assertLogs("gifts.views", level="INFO") as logs:
+            response = self.client.post(
+                reverse("create_wish"),
+                {
+                    "title": "Logging test",
+                    "detail": "Test detail",
+                    "link": "",
+                },
+            )
+
+        self.assertRedirects(response, reverse("my_wishes"))
+
+        self.assertEqual(len(logs.records), 1)
+
+        message = logs.records[0].getMessage()
+        wish = Wish.objects.get(title="Logging test")
+
+        self.assertIn("wish.created", message)
+        self.assertIn(f"wish_id={wish.id}", message)
+        self.assertIn(f"user_id={self.user1.id}", message)
+
+    def test_edit_wish_logs_event(self):
+        self.client.login(username="user1", password="testpassword")
+
+        wish = Wish.objects.create(
+            user=self.user1,
+            title="Original",
+            detail="Original detail",
+        )
+
+        with self.assertLogs("gifts.views", level="INFO") as logs:
+            response = self.client.post(
+                reverse("edit_wish", args=[wish.id]),
+                {
+                    "title": "Updated",
+                    "detail": "Updated detail",
+                    "link": "",
+                },
+            )
+
+        self.assertRedirects(response, reverse("my_wishes"))
+
+        self.assertEqual(len(logs.records), 1)
+
+        message = logs.records[0].getMessage()
+
+        self.assertIn("wish.updated", message)
+        self.assertIn(f"wish_id={wish.id}", message)
+        self.assertIn(f"user_id={self.user1.id}", message)
+
+    def test_claim_wish_logs_event(self):
+        self.client.login(username="user2", password="testpassword")
+
+        wish = Wish.objects.create(
+            user=self.user1,
+            title="Claim me",
+        )
+
+        with self.assertLogs("gifts.views", level="INFO") as logs:
+            response = self.client.post(
+                reverse("claim_wish", args=[wish.id]),
+            )
+
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(len(logs.records), 1)
+
+        message = logs.records[0].getMessage()
+
+        self.assertIn("wish.claimed", message)
+        self.assertIn(f"wish_id={wish.id}", message)
+        self.assertIn(f"wish_owner_id={self.user1.id}", message)
+        self.assertIn(f"claimed_by_id={self.user2.id}", message)
+
+    def test_unclaim_wish_logs_event(self):
+        self.client.login(username="user2", password="testpassword")
+
+        wish = Wish.objects.create(
+            user=self.user1,
+            title="Claim me",
+            claimed=True,
+            claimed_by=self.user2,
+        )
+
+        with self.assertLogs("gifts.views", level="INFO") as logs:
+            response = self.client.post(
+                reverse("unclaim_wish", args=[wish.id]),
+            )
+
+        self.assertEqual(response.status_code, 302)
+
+        self.assertEqual(len(logs.records), 1)
+
+        message = logs.records[0].getMessage()
+
+        self.assertIn("wish.unclaimed", message)
+        self.assertIn(f"wish_id={wish.id}", message)
+        self.assertIn(f"wish_owner_id={self.user1.id}", message)
+        self.assertIn(f"unclaimed_by_id={self.user2.id}", message)
+
+
+    def test_delete_wish_logs_event(self):
+        self.client.login(username="user1", password="testpassword")
+
+        wish = Wish.objects.create(
+            user=self.user1,
+            title="Delete me",
+        )
+
+        with self.assertLogs("gifts.views", level="INFO") as logs:
+            response = self.client.post(
+                reverse("delete_wish", args=[wish.id]),
+            )
+
+        self.assertRedirects(response, reverse("my_wishes"))
+
+        self.assertEqual(len(logs.records), 1)
+
+        message = logs.records[0].getMessage()
+
+        self.assertIn("wish.deleted", message)
+        self.assertIn(f"wish_id={wish.id}", message)
+        self.assertIn(f"user_id={self.user1.id}", message)
+
+
+    def test_password_reset_logs_for_known_email(self):
+        with self.assertLogs("gifts.forms", level="INFO") as logs:
+            response = self.client.post(
+                reverse("password_reset"),
+                {"email": self.user1.email},
+        )
+
+        self.assertRedirects(response, reverse("password_reset_done"))
+
+        messages = [record.getMessage() for record in logs.records]
+
+        self.assertTrue(any("password_reset.request_received" in msg for msg in messages))
+        self.assertTrue(any("password_reset.request_processed" in msg for msg in messages))
+        self.assertTrue(any(f"email={self.user1.email}" in msg for msg in messages))
+
+
+    def test_password_reset_logs_for_unknown_email(self):
+        email = "nobody@example.com"
+
+        with self.assertLogs("gifts.forms", level="INFO") as logs:
+            response = self.client.post(
+                reverse("password_reset"),
+                {"email": email},
+            )
+
+        self.assertRedirects(response, reverse("password_reset_done"))
+
+        messages = [record.getMessage() for record in logs.records]
+
+        self.assertTrue(any("password_reset.request_received" in msg for msg in messages))
+        self.assertTrue(any("password_reset.request_processed" in msg for msg in messages))
+        self.assertTrue(any(f"email={email}" in msg for msg in messages))
